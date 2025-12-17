@@ -69,7 +69,8 @@ if (window.gsap) {
         if (!scroller) return;
 
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReduced) return;
+        const isTouchPrimary = window.matchMedia('(pointer: coarse)').matches;
+        if (prefersReduced || isTouchPrimary) return;
 
         document.body.classList.add('smooth-scroll-enabled');
 
