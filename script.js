@@ -102,6 +102,29 @@ if (window.gsap) {
         raf();
     })();
 
+    // Anchor navigation that respects the fixed smooth-scroll container
+    const anchorLinks = document.querySelectorAll('a[href^="#"]:not([href="#"])');
+    const scrollToHash = (hash) => {
+        if (!hash || hash === '#') return;
+        const targetId = hash.replace('#', '');
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        const targetY = window.scrollY + target.getBoundingClientRect().top;
+        window.scrollTo({ top: targetY, behavior: prefersReduced ? 'auto' : 'smooth' });
+    };
+    anchorLinks.forEach((link) => {
+        link.addEventListener('click', (evt) => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            evt.preventDefault();
+            scrollToHash(href);
+            if (history && history.pushState) history.pushState(null, '', href);
+        });
+    });
+    if (window.location.hash) {
+        scrollToHash(window.location.hash);
+    }
+
     const heroVideo = document.querySelector('.hero video');
     if (heroVideo) {
         heroVideo.muted = true;
@@ -173,6 +196,39 @@ if (window.gsap) {
             if (evt.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu();
         });
     }
+
+    // Hide nav on scroll down, show on scroll up
+    const header = document.querySelector('header');
+    let lastScrollY = window.scrollY;
+    let scrollTicking = false;
+    const handleHeaderScroll = () => {
+        if (!header) return;
+        const currentY = Math.max(window.scrollY, 0);
+        const delta = currentY - lastScrollY;
+
+        if (document.body.classList.contains('menu-open')) {
+            header.classList.remove('nav-hidden');
+            lastScrollY = currentY;
+            scrollTicking = false;
+            return;
+        }
+
+        if (currentY <= 24) {
+            header.classList.remove('nav-hidden');
+        } else if (delta > 6) {
+            header.classList.add('nav-hidden');
+        } else if (delta < -6) {
+            header.classList.remove('nav-hidden');
+        }
+
+        lastScrollY = currentY;
+        scrollTicking = false;
+    };
+    window.addEventListener('scroll', () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(handleHeaderScroll);
+    });
 
     gsap.to('.hero__content', {
         yPercent: -25,

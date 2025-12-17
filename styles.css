@@ -272,6 +272,13 @@ header {
     background: color-mix(in srgb, var(--bg) 90%, color-mix(in srgb, var(--primary) 10%, #ffffff));
     backdrop-filter: blur(14px);
     border-bottom: 1px solid color-mix(in srgb, var(--info) 28%, #ffffff);
+    transform: translateY(0);
+    transition: transform 0.45s ease, background-color 0.3s ease, border-color 0.3s ease;
+    will-change: transform;
+}
+
+.nav-hidden {
+    transform: translateY(-100%);
 }
 
 .nav {
@@ -377,15 +384,15 @@ header {
 main { padding-top: 0; }
 main { padding-top: 64px; }
 
-.hero {
-    position: relative;
-    min-height: 90vh;
-    display: grid;
-    align-items: end;
-    overflow: hidden;
-    isolation: isolate;
-    background: linear-gradient(140deg, color-mix(in srgb, var(--baltic) 85%, transparent) 0%, color-mix(in srgb, var(--kashmir) 65%, var(--baltic)) 50%, color-mix(in srgb, var(--primary) 38%, var(--baltic)) 100%);
-}
+  .hero {
+      position: relative;
+      min-height: 90vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      isolation: isolate;
+      background: linear-gradient(140deg, color-mix(in srgb, var(--baltic) 85%, transparent) 0%, color-mix(in srgb, var(--kashmir) 65%, var(--baltic)) 50%, color-mix(in srgb, var(--primary) 38%, var(--baltic)) 100%);
+  }
 
 .hero video {
     position: absolute;
@@ -406,19 +413,19 @@ main { padding-top: 64px; }
     background: linear-gradient(180deg, rgba(17, 28, 44, 0.7) 0%, rgba(11, 19, 32, 0.82) 60%, rgba(6, 12, 20, 0.9) 100%);
 }
 
-.hero__content {
-    position: relative;
-    z-index: 3;
-    padding: clamp(5rem, 8vh, 7rem) var(--space-4) clamp(3.5rem, 6vh, 5rem);
-    color: #ffffff;
-    display: grid;
-    gap: var(--space-3);
-    max-width: min(62rem, 100%);
-    margin: 0 auto;
-    text-align: center;
-    align-items: center;
-    justify-items: center;
-}
+  .hero__content {
+      position: relative;
+      z-index: 3;
+      padding: clamp(2.75rem, 7vh, 5rem);
+      color: #ffffff;
+      display: grid;
+      gap: var(--space-3);
+      max-width: min(62rem, 100%);
+      margin: 0 auto;
+      text-align: center;
+      align-items: center;
+      justify-items: center;
+  }
 
 .hero-title { color: #ffffff; margin: 0; max-width: 48ch; }
 .hero-title { will-change: transform, filter; }
@@ -552,6 +559,8 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 .card p { margin: 0; color: var(--ink-muted); }
 
 #produktion { background: linear-gradient(165deg, color-mix(in srgb, var(--baltic) 94%, #0a1422), color-mix(in srgb, var(--kashmir) 22%, var(--baltic))); color: #ffffff; }
+#produktion { scroll-margin-top: 96px; }
+#so-entsteht { scroll-margin-top: 96px; }
 #produktion .container {
     width: 100%;
     margin: 0 auto;
@@ -1221,9 +1230,9 @@ footer { padding: var(--space-5) 0 var(--space-6); color: color-mix(in srgb, var
 }
 
 @media (max-width: 640px) {
-    .hero { min-height: 100vh; align-items: center; }
+    .hero { min-height: 100vh; place-items: center; }
     .hero video { display: block !important; opacity: 1 !important; min-height: 100%; }
-    .hero__content { padding: clamp(3.6rem, 8vh, 5rem) var(--space-3) clamp(2.6rem, 6vh, 3.6rem); }
+    .hero__content { padding: clamp(2.5rem, 8vh, 4rem); }
     .hero-subtitle { font-size: 1.05rem; }
     .btn { width: 100%; justify-content: center; }
     .process-scroll__track { gap: var(--space-3); padding: var(--space-3) var(--space-3); }
