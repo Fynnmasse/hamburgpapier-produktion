@@ -63,6 +63,40 @@ if (window.gsap) {
         playIntro();
     }
 
+    // Smooth scrolling with inertia (Luxy-like)
+    (function () {
+        const scroller = document.getElementById('smooth-scroll');
+        if (!scroller) return;
+
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReduced) return;
+
+        document.body.classList.add('smooth-scroll-enabled');
+
+        let target = window.scrollY;
+        let current = window.scrollY;
+        const ease = 0.12;
+
+        const setHeight = () => {
+            const height = Math.max(scroller.scrollHeight, window.innerHeight);
+            document.body.style.height = `${height}px`;
+        };
+        setHeight();
+
+        const resizeObserver = new ResizeObserver(setHeight);
+        resizeObserver.observe(scroller);
+        window.addEventListener('resize', setHeight);
+
+        const raf = () => {
+            target = window.scrollY;
+            current += (target - current) * ease;
+            if (Math.abs(target - current) < 0.1) current = target;
+            scroller.style.transform = `translate3d(0, ${-current}px, 0)`;
+            requestAnimationFrame(raf);
+        };
+        raf();
+    })();
+
     const heroVideo = document.querySelector('.hero video');
     if (heroVideo) {
         heroVideo.muted = true;
@@ -140,22 +174,6 @@ if (window.gsap) {
         ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 0.35 }
     });
-
-    if (!prefersReduced) {
-        const heroSection = document.querySelector('.hero');
-        if (heroSection) {
-            gsap.to(heroSection, {
-                autoAlpha: 0,
-                scale: 0.98,
-                scrollTrigger: {
-                    trigger: heroSection,
-                    start: 'top top',
-                    end: '70% top',
-                    scrub: 0.6
-                }
-            });
-        }
-    }
 
     const slider = document.getElementById('process-slider');
     if (slider) {
