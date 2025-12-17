@@ -364,6 +364,11 @@ header {
     right: var(--space-4);
     background: color-mix(in srgb, var(--kashmir) 65%, rgba(255, 255, 255, 0.1));
     border-color: color-mix(in srgb, #ffffff 45%, var(--primary));
+    z-index: 150;
+}
+.menu-open .nav-shop {
+    opacity: 0;
+    pointer-events: none;
 }
 .menu-open .nav-toggle span { background: #ffffff; }
 
