@@ -69,7 +69,8 @@ if (window.gsap) {
 
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchPrimary = window.matchMedia('(pointer: coarse)').matches;
-        if (prefersReduced || isTouchPrimary) return;
+        const lowPower = typeof navigator !== 'undefined' && 'deviceMemory' in navigator && navigator.deviceMemory <= 4;
+        if (prefersReduced || isTouchPrimary || lowPower) return;
 
         document.body.classList.add('smooth-scroll-enabled');
 
@@ -196,6 +197,7 @@ if (window.gsap) {
     const header = document.querySelector('header');
     let lastScrollY = window.scrollY;
     let scrollTicking = false;
+    const hideThreshold = 120;
     const handleHeaderScroll = () => {
         if (!header) return;
         const currentY = Math.max(window.scrollY, 0);
@@ -208,11 +210,11 @@ if (window.gsap) {
             return;
         }
 
-        if (currentY <= 24) {
+        if (currentY <= hideThreshold) {
             header.classList.remove('nav-hidden');
-        } else if (delta > 6) {
+        } else if (delta > 8) {
             header.classList.add('nav-hidden');
-        } else if (delta < -6) {
+        } else if (delta < -8) {
             header.classList.remove('nav-hidden');
         }
 
@@ -243,9 +245,19 @@ if (window.gsap) {
             const setTrackX = gsap.quickSetter(track, 'x', 'px');
             const setProgressWidth = progressFillBar ? gsap.quickSetter(progressFillBar, 'width', '%') : null;
             viewport.setAttribute('tabindex', '0');
+            slides.forEach((slide) => slide.setAttribute('tabindex', '0'));
             const slideVideos = slides
                 .map((slide) => slide.querySelector('.process-slide__video'))
                 .filter(Boolean);
+            slides.forEach((slide) => {
+                const title = slide.querySelector('.process-slide__title');
+                const video = slide.querySelector('.process-slide__video');
+                if (video && title) {
+                    const label = title.textContent?.trim() || 'Prozessschritt Video';
+                    video.setAttribute('aria-label', label);
+                    video.setAttribute('title', label);
+                }
+            });
             const playIfActive = (video, idx) => {
                 if (activeIndex === idx && video.paused) {
                     const p = video.play();
@@ -317,6 +329,17 @@ if (window.gsap) {
                 return nearest.i;
             };
 
+            let sliderInView = true;
+            const sliderObserver = new IntersectionObserver((entries) => {
+                sliderInView = entries.some((e) => e.isIntersecting);
+                if (!sliderInView) {
+                    slideVideos.forEach((video) => video.pause());
+                } else {
+                    playIfActive(slideVideos[activeIndex], activeIndex);
+                }
+            }, { threshold: 0.3 });
+            sliderObserver.observe(slider);
+
             const setActive = (idx) => {
                 const next = Math.min(slides.length - 1, Math.max(0, idx));
                 if (next === activeIndex && slides[next]?.dataset.active === 'true') return;
@@ -327,15 +350,15 @@ if (window.gsap) {
                     const video = slide.querySelector('.process-slide__video');
                     if (video) {
                         if (isActive) {
-                            video.play().catch(() => {});
+                            if (sliderInView) video.play().catch(() => {});
                         } else {
                             video.pause();
                             video.currentTime = 0;
                         }
                     }
                     gsap.to(slide, {
-                        scale: isActive ? 1.03 : 0.97,
-                        autoAlpha: isActive ? 1 : 0.88,
+                        scale: isActive ? 1.03 : 0.99,
+                        autoAlpha: 1,
                         duration: prefersReduced ? 0 : 0.25,
                         ease: 'power2.out'
                     });
@@ -439,8 +462,18 @@ if (window.gsap) {
 
             slider.addEventListener('keydown', (evt) => {
                 const baseIndex = currentIndex();
-                if (evt.key === 'ArrowRight') { evt.preventDefault(); snapTo(baseIndex + 1); }
-                if (evt.key === 'ArrowLeft') { evt.preventDefault(); snapTo(baseIndex - 1); }
+                if (['ArrowRight', 'PageDown'].includes(evt.key)) { evt.preventDefault(); snapTo(baseIndex + 1); }
+                if (['ArrowLeft', 'PageUp'].includes(evt.key)) { evt.preventDefault(); snapTo(baseIndex - 1); }
+                if (evt.key === 'Home') { evt.preventDefault(); snapTo(0); }
+                if (evt.key === 'End') { evt.preventDefault(); snapTo(slides.length - 1); }
+            });
+            slides.forEach((slide, idx) => {
+                slide.addEventListener('keydown', (evt) => {
+                    if (evt.key !== 'Enter' && evt.key !== ' ') return;
+                    evt.preventDefault();
+                    snapTo(idx);
+                    slide.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'center', inline: 'center' });
+                });
             });
 
             const refreshPositions = () => {
