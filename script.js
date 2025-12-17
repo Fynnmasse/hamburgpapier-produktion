@@ -28,7 +28,11 @@ if (window.gsap) {
         introTl
             .to('.hero video', { autoAlpha: 1, scale: 1, filter: 'blur(0px) saturate(1.05)', duration: 2.8 }, 0)
             .to('.hero__content', { autoAlpha: 1, y: 0, duration: 1.8 }, 0.9)
-            .from('.hero-title', { autoAlpha: 0, y: 26, duration: 1.4 }, 1.1)
+            .fromTo('.hero-title',
+                { autoAlpha: 0, y: 36, skewY: 6, filter: 'blur(8px)' },
+                { autoAlpha: 1, y: 0, skewY: 0, filter: 'blur(0px)', duration: 1.6, ease: 'power3.out' },
+                1.0
+            )
             .from('.hero-subtitle', { autoAlpha: 0, y: 22, duration: 1.3 }, '-=0.8');
     };
 

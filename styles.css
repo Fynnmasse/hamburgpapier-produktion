@@ -421,6 +421,7 @@ main { padding-top: 64px; }
 }
 
 .hero-title { color: #ffffff; margin: 0; max-width: 48ch; }
+.hero-title { will-change: transform, filter; }
 .hero-subtitle {
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
@@ -1220,8 +1221,9 @@ footer { padding: var(--space-5) 0 var(--space-6); color: color-mix(in srgb, var
 }
 
 @media (max-width: 640px) {
-    .hero { min-height: 100vh; }
+    .hero { min-height: 100vh; align-items: center; }
     .hero video { display: block !important; opacity: 1 !important; min-height: 100%; }
+    .hero__content { padding: clamp(3.6rem, 8vh, 5rem) var(--space-3) clamp(2.6rem, 6vh, 3.6rem); }
     .hero-subtitle { font-size: 1.05rem; }
     .btn { width: 100%; justify-content: center; }
     .process-scroll__track { gap: var(--space-3); padding: var(--space-3) var(--space-3); }
