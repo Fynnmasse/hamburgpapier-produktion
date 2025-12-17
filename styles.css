@@ -551,7 +551,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 .card h3 { margin: 0 0 var(--space-2); font-size: inherit; }
 .card p { margin: 0; color: var(--ink-muted); }
 
-#produktion { background: linear-gradient(165deg, color-mix(in srgb, var(--baltic) 88%, #0e1826), color-mix(in srgb, var(--kashmir) 28%, var(--baltic))); color: #ffffff; }
+#produktion { background: linear-gradient(165deg, color-mix(in srgb, var(--baltic) 94%, #0a1422), color-mix(in srgb, var(--kashmir) 22%, var(--baltic))); color: #ffffff; }
 #produktion .container {
     width: 100%;
     margin: 0 auto;
