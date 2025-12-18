@@ -1,0 +1,126 @@
+:root {
+  --background: #f3a683;
+  --base: #303952;
+  --accent: #786fa6;
+  --shadow: #e77f67;
+}
+
+html {
+  background: var(--background);
+  display: grid;
+  height: 100%;
+  place-items: center;
+}
+
+.cool {
+  font: bold 3rem/1.2 sans-serif;
+  max-width: 20rem;
+}
+.cool span {
+  color: var(--shadow);
+  display: inline-block;
+  position: relative;
+}
+.cool span:nth-child(1)::before, .cool span:nth-child(1)::after {
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s;
+}
+.cool span:nth-child(2)::before, .cool span:nth-child(2)::after {
+  -webkit-animation-delay: 0.2s;
+          animation-delay: 0.2s;
+}
+.cool span:nth-child(3)::before, .cool span:nth-child(3)::after {
+  -webkit-animation-delay: 0.3s;
+          animation-delay: 0.3s;
+}
+.cool span:nth-child(4)::before, .cool span:nth-child(4)::after {
+  -webkit-animation-delay: 0.4s;
+          animation-delay: 0.4s;
+}
+.cool span:nth-child(5)::before, .cool span:nth-child(5)::after {
+  -webkit-animation-delay: 0.5s;
+          animation-delay: 0.5s;
+}
+.cool span:nth-child(6)::before, .cool span:nth-child(6)::after {
+  -webkit-animation-delay: 0.6s;
+          animation-delay: 0.6s;
+}
+.cool span:nth-child(7)::before, .cool span:nth-child(7)::after {
+  -webkit-animation-delay: 0.7s;
+          animation-delay: 0.7s;
+}
+.cool span:nth-child(8)::before, .cool span:nth-child(8)::after {
+  -webkit-animation-delay: 0.8s;
+          animation-delay: 0.8s;
+}
+.cool span:nth-child(9)::before, .cool span:nth-child(9)::after {
+  -webkit-animation-delay: 0.9s;
+          animation-delay: 0.9s;
+}
+.cool span:nth-child(10)::before, .cool span:nth-child(10)::after {
+  -webkit-animation-delay: 1s;
+          animation-delay: 1s;
+}
+@media (prefers-reduced-motion) {
+  .cool span {
+    color: var(--base);
+  }
+}
+.cool span::before {
+  -webkit-animation: max-height 0.4s cubic-bezier(0.61, 1, 0.88, 1) 1 normal both;
+          animation: max-height 0.4s cubic-bezier(0.61, 1, 0.88, 1) 1 normal both;
+  color: var(--accent);
+}
+.cool span::after {
+  -webkit-animation: max-width 0.7s cubic-bezier(0.61, 1, 0.88, 1) 1 normal both;
+          animation: max-width 0.7s cubic-bezier(0.61, 1, 0.88, 1) 1 normal both;
+  color: var(--base);
+}
+.cool span::before, .cool span::after {
+  content: attr(data-text);
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  speak: none;
+}
+@media (prefers-reduced-motion) {
+  .cool span::before, .cool span::after {
+    -webkit-animation: none;
+            animation: none;
+    content: "";
+  }
+}
+
+@-webkit-keyframes max-width {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+
+@keyframes max-width {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+@-webkit-keyframes max-height {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 100%;
+  }
+}
+@keyframes max-height {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 100%;
+  }
+}

@@ -1,5 +1,71 @@
 ﻿
 // Inhalt aus script.js
+const prefersReducedMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
+
+const prepareShadowText = (target) => {
+    if (!target || target.dataset.shadowReady === 'true') return;
+    const rawText = target.textContent;
+    if (!rawText || !rawText.trim()) return;
+
+    target.dataset.shadowReady = 'true';
+    const words = rawText.trim().split(/\s+/);
+    const fragment = document.createDocumentFragment();
+    let delayIndex = 0;
+
+    words.forEach((word, index) => {
+        const segments = word.split(/(-)/).filter(Boolean);
+        segments.forEach((segment) => {
+            const span = document.createElement('span');
+            span.textContent = segment;
+            span.setAttribute('data-text', segment);
+            delayIndex += 1;
+            span.style.setProperty('--shadow-delay', `${delayIndex * 0.08}s`);
+            fragment.appendChild(span);
+        });
+        if (index < words.length - 1) {
+            fragment.appendChild(document.createTextNode(' '));
+        }
+    });
+
+    target.textContent = '';
+    target.appendChild(fragment);
+};
+
+const triggerShadowAnimation = (target) => {
+    if (!target || prefersReducedMotion) return;
+    prepareShadowText(target);
+    if (target.dataset.shadowReady !== 'true') return;
+    target.classList.remove('is-shadow-animated');
+    if (target._shadowRafId) cancelAnimationFrame(target._shadowRafId);
+    target._shadowRafId = requestAnimationFrame(() => {
+        target.classList.add('is-shadow-animated');
+        target._shadowRafId = null;
+    });
+};
+
+const scheduleShadowAnimation = (target) => {
+    if (!target || prefersReducedMotion) return;
+    if (target._shadowIdleId) {
+        if (target._shadowIdleType === 'idle' && 'cancelIdleCallback' in window) {
+            cancelIdleCallback(target._shadowIdleId);
+        } else {
+            clearTimeout(target._shadowIdleId);
+        }
+    }
+    const start = () => {
+        target._shadowIdleId = null;
+        triggerShadowAnimation(target);
+    };
+    if ('requestIdleCallback' in window) {
+        target._shadowIdleType = 'idle';
+        target._shadowIdleId = requestIdleCallback(start, { timeout: 250 });
+    } else {
+        target._shadowIdleType = 'timeout';
+        target._shadowIdleId = setTimeout(start, 120);
+    }
+};
 if (window.gsap) {
     gsap.registerPlugin(ScrollTrigger);
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -249,9 +315,14 @@ if (window.gsap) {
             const slideVideos = slides
                 .map((slide) => slide.querySelector('.process-slide__video'))
                 .filter(Boolean);
-            slides.forEach((slide) => {
+            slides.forEach((slide, index) => {
                 const title = slide.querySelector('.process-slide__title');
                 const video = slide.querySelector('.process-slide__video');
+                if (title && index !== 0) {
+                    title.setAttribute('data-shadow-text', '');
+                    title.setAttribute('data-shadow-trigger', 'manual');
+                    prepareShadowText(title);
+                }
                 if (video && title) {
                     const label = title.textContent?.trim() || 'Prozessschritt Video';
                     video.setAttribute('aria-label', label);
@@ -340,14 +411,15 @@ if (window.gsap) {
             }, { threshold: 0.3 });
             sliderObserver.observe(slider);
 
-            const setActive = (idx) => {
+            const setActive = (idx, force = false) => {
                 const next = Math.min(slides.length - 1, Math.max(0, idx));
-                if (next === activeIndex && slides[next]?.dataset.active === 'true') return;
+                if (!force && next === activeIndex && slides[next]?.dataset.active === 'true') return;
                 activeIndex = next;
                 slides.forEach((slide, i) => {
                     const isActive = i === activeIndex;
                     slide.dataset.active = isActive;
                     const video = slide.querySelector('.process-slide__video');
+                    const title = slide.querySelector('.process-slide__title');
                     if (video) {
                         if (isActive) {
                             if (sliderInView) video.play().catch(() => {});
@@ -355,6 +427,9 @@ if (window.gsap) {
                             video.pause();
                             video.currentTime = 0;
                         }
+                    }
+                    if (title && !isActive) {
+                        title.classList.remove('is-shadow-animated');
                     }
                     gsap.to(slide, {
                         scale: isActive ? 1.03 : 0.99,
@@ -417,19 +492,20 @@ if (window.gsap) {
                 pointerMoved = false;
                 dragDelta = 0;
                 if (Math.abs(deltaX) > 24) {
-                    snapTo(current + (deltaX > 0 ? 1 : -1));
+                    snapTo(current + (deltaX > 0 ? 1 : -1), { force: true });
                     return;
                 }
                 if (clickSlide >= 0) {
-                    snapTo(clickSlide);
+                    snapTo(clickSlide, { force: true });
                 } else {
                     snapTo(current);
                 }
             });
             slider.addEventListener('dragstart', (e) => e.preventDefault());
 
-            const snapTo = (idx) => {
+            const snapTo = (idx, options = {}) => {
                 if (!positions.length) computePositions();
+                const { force = false } = options;
                 const max = maxOffset();
                 const targetIndex = Math.min(slides.length - 1, Math.max(0, idx));
                 const targetPos = positions[targetIndex] ?? 0;
@@ -444,7 +520,11 @@ if (window.gsap) {
                     },
                     onComplete() {
                         snapTween = null;
-                        setActive(targetIndex);
+                        setActive(targetIndex, force);
+                        if (sliderInView) {
+                            const activeTitle = slides[targetIndex]?.querySelector('.process-slide__title');
+                            if (activeTitle) triggerShadowAnimation(activeTitle);
+                        }
                         updateProgress(clamped);
                     }
                 });
@@ -455,7 +535,7 @@ if (window.gsap) {
                 computePositions();
                 const dir = btn.dataset.dir === 'next' ? 1 : -1;
                 const baseIndex = currentIndex();
-                snapTo(baseIndex + dir);
+                snapTo(baseIndex + dir, { force: true });
             }));
 
             slides.forEach((slide) => { slide.style.cursor = 'pointer'; });
@@ -627,5 +707,32 @@ const initFaqAccordion = () => {
     });
 };
 
+const initShadowText = () => {
+    const targets = Array.from(document.querySelectorAll('[data-shadow-text]'));
+    if (!targets.length) return;
+
+    let observer = null;
+    if (!prefersReducedMotion && 'IntersectionObserver' in window) {
+        observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                scheduleShadowAnimation(entry.target);
+                obs.unobserve(entry.target);
+            });
+        }, { threshold: 0.35 });
+    }
+
+    targets.forEach((target) => {
+        prepareShadowText(target);
+        if (target.dataset.shadowTrigger === 'manual') return;
+        if (observer) {
+            observer.observe(target);
+        } else {
+            scheduleShadowAnimation(target);
+        }
+    });
+};
+
 initHoverVideos();
 initFaqAccordion();
+initShadowText();

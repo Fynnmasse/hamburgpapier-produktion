@@ -659,28 +659,87 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 #produktion .section-header { width: min(var(--container-max), calc(100% - var(--space-4) * 2)); margin-left: auto; margin-right: auto; padding-inline: var(--space-4); }
 #produktion .section-header { color: #ffffff; }
 #produktion .section-header p { color: color-mix(in srgb, #ffffff 72%, var(--kashmir)); }
-#produktion .shadow-animate {
-    animation: text-shadow-glow 5.6s ease-in-out infinite;
-    text-shadow:
-        0 0 0 rgba(255, 255, 255, 0),
-        0 0 0 rgba(112, 170, 220, 0),
-        0 0 0 rgba(64, 121, 178, 0);
+#produktion [data-shadow-text] {
+    --shadow-base: #ffffff;
+    --shadow-accent: color-mix(in srgb, var(--primary) 70%, #ffffff);
+    --shadow-layer: color-mix(in srgb, var(--info) 72%, #0b1826);
 }
-#produktion .shadow-animate--title { animation-duration: 4.6s; }
-#produktion .shadow-animate--lead { animation-duration: 6.4s; animation-delay: 0.6s; }
+#produktion .process-slide__title[data-shadow-text] {
+    --shadow-base: #15203b;
+    --shadow-accent: #2f4663;
+    --shadow-layer: #6f7b8a;
+}
+#produktion .process-slide__title[data-shadow-text] span {
+    color: transparent;
+}
+#produktion .process-slide__title[data-shadow-text] span::before {
+    color: var(--shadow-layer);
+    max-height: none;
+    animation: none;
+}
+#produktion .process-slide__title[data-shadow-text].is-shadow-animated span::before {
+    animation: none;
+}
+#produktion .process-slide__title[data-shadow-text].is-shadow-animated span {
+    animation: none;
+}
+#produktion .process-slide__title[data-shadow-text].is-shadow-animated span::after {
+    animation-delay: calc(var(--shadow-delay, 0s) + 0.12s);
+}
+#produktion [data-shadow-text] span {
+    color: var(--shadow-layer);
+    display: inline-block;
+    position: relative;
+}
+#produktion [data-shadow-text] span::before,
+#produktion [data-shadow-text] span::after {
+    content: attr(data-text);
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    pointer-events: none;
+}
+#produktion [data-shadow-text] span::before {
+    color: var(--shadow-accent);
+    max-height: 0;
+}
+#produktion [data-shadow-text] span::after {
+    color: var(--shadow-base);
+    max-width: 0;
+}
+#produktion [data-shadow-text].is-shadow-animated span {
+    animation: shadow-base-fade 0.2s ease forwards;
+    animation-delay: calc(var(--shadow-delay, 0s) + 0.2s);
+}
+#produktion [data-shadow-text].is-shadow-animated span::before {
+    animation: shadow-reveal-height 0.4s cubic-bezier(0.61, 1, 0.88, 1) both;
+    animation-delay: var(--shadow-delay, 0s);
+}
+#produktion [data-shadow-text].is-shadow-animated span::after {
+    animation: shadow-reveal-width 0.7s cubic-bezier(0.61, 1, 0.88, 1) both;
+    animation-delay: var(--shadow-delay, 0s);
+}
 
-@keyframes text-shadow-glow {
-    0%, 100% {
-        text-shadow:
-            0 0 0 rgba(255, 255, 255, 0),
-            0 0 0 rgba(112, 170, 220, 0),
-            0 0 0 rgba(64, 121, 178, 0);
-    }
-    50% {
-        text-shadow:
-            0 0 12px rgba(255, 255, 255, 0.35),
-            0 0 26px rgba(112, 170, 220, 0.45),
-            0 0 42px rgba(64, 121, 178, 0.4);
+@keyframes shadow-reveal-width {
+    from { max-width: 0; }
+    to { max-width: 100%; }
+}
+
+@keyframes shadow-reveal-height {
+    from { max-height: 0; }
+    to { max-height: 100%; }
+}
+
+@keyframes shadow-base-fade {
+    to { color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #produktion [data-shadow-text] span { color: inherit; }
+    #produktion [data-shadow-text] span::before,
+    #produktion [data-shadow-text] span::after {
+        animation: none;
+        content: '';
     }
 }
 
