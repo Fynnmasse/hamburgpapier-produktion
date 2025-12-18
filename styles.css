@@ -707,6 +707,27 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     color: var(--shadow-base);
     max-width: 0;
 }
+#produktion [data-shadow-text][data-shadow-mode="transform"] span::before,
+#produktion [data-shadow-text][data-shadow-mode="transform"] span::after {
+    max-width: none;
+    max-height: none;
+    transform-origin: left top;
+    will-change: transform;
+}
+#produktion [data-shadow-text][data-shadow-mode="transform"] span::before {
+    transform: scaleY(0);
+}
+#produktion [data-shadow-text][data-shadow-mode="transform"] span::after {
+    transform: scaleX(0);
+}
+#produktion [data-shadow-text][data-shadow-mode="transform"].is-shadow-animated span::before {
+    animation: shadow-reveal-height-transform 0.35s cubic-bezier(0.61, 1, 0.88, 1) both;
+    animation-delay: var(--shadow-delay, 0s);
+}
+#produktion [data-shadow-text][data-shadow-mode="transform"].is-shadow-animated span::after {
+    animation: shadow-reveal-width-transform 0.6s cubic-bezier(0.61, 1, 0.88, 1) both;
+    animation-delay: var(--shadow-delay, 0s);
+}
 #produktion [data-shadow-text].is-shadow-animated span {
     animation: shadow-base-fade 0.2s ease forwards;
     animation-delay: calc(var(--shadow-delay, 0s) + 0.2s);
@@ -728,6 +749,16 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 @keyframes shadow-reveal-height {
     from { max-height: 0; }
     to { max-height: 100%; }
+}
+
+@keyframes shadow-reveal-width-transform {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+@keyframes shadow-reveal-height-transform {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
 }
 
 @keyframes shadow-base-fade {
