@@ -669,11 +669,33 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     --shadow-accent: #2f4663;
     --shadow-layer: #6f7b8a;
 }
+#produktion .process-slide__text[data-shadow-text] {
+    --shadow-base: #15203b;
+    --shadow-accent: #2f4663;
+    --shadow-layer: #6f7b8a;
+}
+#produktion .process-slide__text[data-shadow-text] span {
+    color: var(--shadow-layer);
+}
+#produktion .process-slide__text[data-shadow-text] span::before {
+    content: '';
+    max-height: none;
+    animation: none;
+}
+#produktion .process-slide__text[data-shadow-text].is-shadow-animated span {
+    animation: none;
+}
+#produktion .process-slide__text[data-shadow-text].is-shadow-animated span::before {
+    animation: none;
+}
+#produktion .process-slide__text[data-shadow-text].is-shadow-animated span::after {
+    animation-delay: calc(var(--shadow-delay, 0s) + 0.12s);
+}
 #produktion .process-slide__title[data-shadow-text] span {
-    color: transparent;
+    color: var(--shadow-layer);
 }
 #produktion .process-slide__title[data-shadow-text] span::before {
-    color: var(--shadow-layer);
+    content: '';
     max-height: none;
     animation: none;
 }
@@ -698,35 +720,16 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     overflow: hidden;
     position: absolute;
     pointer-events: none;
+    white-space: nowrap;
+    will-change: clip-path;
 }
 #produktion [data-shadow-text] span::before {
     color: var(--shadow-accent);
-    max-height: 0;
+    clip-path: inset(100% 0 0 0);
 }
 #produktion [data-shadow-text] span::after {
     color: var(--shadow-base);
-    max-width: 0;
-}
-#produktion [data-shadow-text][data-shadow-mode="transform"] span::before,
-#produktion [data-shadow-text][data-shadow-mode="transform"] span::after {
-    max-width: none;
-    max-height: none;
-    transform-origin: left top;
-    will-change: transform;
-}
-#produktion [data-shadow-text][data-shadow-mode="transform"] span::before {
-    transform: scaleY(0);
-}
-#produktion [data-shadow-text][data-shadow-mode="transform"] span::after {
-    transform: scaleX(0);
-}
-#produktion [data-shadow-text][data-shadow-mode="transform"].is-shadow-animated span::before {
-    animation: shadow-reveal-height-transform 0.35s cubic-bezier(0.61, 1, 0.88, 1) both;
-    animation-delay: var(--shadow-delay, 0s);
-}
-#produktion [data-shadow-text][data-shadow-mode="transform"].is-shadow-animated span::after {
-    animation: shadow-reveal-width-transform 0.6s cubic-bezier(0.61, 1, 0.88, 1) both;
-    animation-delay: var(--shadow-delay, 0s);
+    clip-path: inset(0 100% 0 0);
 }
 #produktion [data-shadow-text].is-shadow-animated span {
     animation: shadow-base-fade 0.2s ease forwards;
@@ -742,24 +745,15 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 }
 
 @keyframes shadow-reveal-width {
-    from { max-width: 0; }
-    to { max-width: 100%; }
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
 }
 
 @keyframes shadow-reveal-height {
-    from { max-height: 0; }
-    to { max-height: 100%; }
+    from { clip-path: inset(100% 0 0 0); }
+    to { clip-path: inset(0 0 0 0); }
 }
 
-@keyframes shadow-reveal-width-transform {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-}
-
-@keyframes shadow-reveal-height-transform {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-}
 
 @keyframes shadow-base-fade {
     to { color: transparent; }

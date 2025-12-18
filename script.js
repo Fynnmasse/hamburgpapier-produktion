@@ -317,11 +317,17 @@ if (window.gsap) {
                 .filter(Boolean);
             slides.forEach((slide, index) => {
                 const title = slide.querySelector('.process-slide__title');
+                const description = slide.querySelector('.process-slide__text');
                 const video = slide.querySelector('.process-slide__video');
                 if (title && index !== 0) {
                     title.setAttribute('data-shadow-text', '');
                     title.setAttribute('data-shadow-trigger', 'manual');
                     prepareShadowText(title);
+                }
+                if (description) {
+                    description.setAttribute('data-shadow-text', '');
+                    description.setAttribute('data-shadow-trigger', 'manual');
+                    prepareShadowText(description);
                 }
                 if (video && title) {
                     const label = title.textContent?.trim() || 'Prozessschritt Video';
@@ -428,8 +434,10 @@ if (window.gsap) {
                             video.currentTime = 0;
                         }
                     }
-                    if (title && !isActive) {
-                        title.classList.remove('is-shadow-animated');
+                    if (!isActive) {
+                        slide.querySelectorAll('[data-shadow-text]').forEach((el) => {
+                            el.classList.remove('is-shadow-animated');
+                        });
                     }
                     gsap.to(slide, {
                         scale: isActive ? 1.03 : 0.99,
@@ -522,8 +530,10 @@ if (window.gsap) {
                         snapTween = null;
                         setActive(targetIndex, force);
                         if (sliderInView) {
-                            const activeTitle = slides[targetIndex]?.querySelector('.process-slide__title');
-                            if (activeTitle) triggerShadowAnimation(activeTitle);
+                            const shadowTargets = slides[targetIndex]?.querySelectorAll('[data-shadow-text]');
+                            if (shadowTargets && shadowTargets.length) {
+                                shadowTargets.forEach((el) => triggerShadowAnimation(el));
+                            }
                         }
                         updateProgress(clamped);
                     }
