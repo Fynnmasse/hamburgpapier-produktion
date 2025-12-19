@@ -474,7 +474,12 @@ main { padding-top: 64px; }
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(180deg, rgba(17, 28, 44, 0.7) 0%, rgba(11, 19, 32, 0.82) 60%, rgba(6, 12, 20, 0.9) 100%);
+    background: linear-gradient(
+        180deg,
+        rgba(17, 28, 44, 0.48) 0%,
+        rgba(11, 19, 32, 0.62) 60%,
+        rgba(6, 12, 20, 0.68) 100%
+    );
 }
 
   .hero__content {
