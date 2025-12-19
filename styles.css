@@ -661,7 +661,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     position: relative;
     z-index: 1;
 }
-#produktion .section-header { width: min(var(--container-max), calc(100% - var(--space-4) * 2)); margin-left: auto; margin-right: auto; padding-inline: var(--space-4); }
+#produktion .section-header { width: min(var(--container-max), calc(100% - var(--space-4) * 2)); margin-left: auto; margin-right: auto; padding-inline: var(--space-4); margin-bottom: var(--space-2); }
 #produktion .section-header { color: #ffffff; }
 #produktion .section-header p { color: color-mix(in srgb, #ffffff 72%, var(--kashmir)); }
 #produktion [data-shadow-text] {
@@ -920,19 +920,34 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 .process-slide__title { margin: 0; font-size: 1.2rem; color: #15203b; }
 .process-slide__text { margin: 0; color: var(--ink-muted); font-size: 1.02rem; line-height: 1.65; overflow-wrap: break-word; }
 .process-slide__list { margin: 0.25rem 0 0; padding-left: 1.1rem; color: var(--ink-muted); line-height: 1.65; overflow-wrap: break-word; }
-.process-slide[data-active="true"] { border: 1px solid color-mix(in srgb, var(--primary) 50%, var(--border)); transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14); }
+.process-slide[data-active="true"] {
+    border: 1px solid color-mix(in srgb, var(--primary) 60%, var(--border));
+    transform: translateY(-4px);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.17), 0 6px 16px rgba(0, 0, 0, 0.12);
+}
 .process-slide[data-active="true"] .process-slide__title { color: color-mix(in srgb, var(--primary) 60%, var(--ink)); }
 
 .process-scroll__controls {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: var(--space-3);
     gap: var(--space-3);
-    padding-inline: var(--space-1);
+    padding-inline: clamp(1rem, 4vw, 3rem);
+    width: 100%;
+    max-width: min(1200px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+}
+.process-scroll__progress-wrap {
+    width: 100%;
+    max-width: min(1200px, 100%);
+    margin: 0 auto var(--space-3);
+    padding-inline: clamp(1.5rem, 5vw, 3.5rem);
 }
 .process-scroll__progress {
-    flex: 1;
+    width: 100%;
     height: 8px;
     background: color-mix(in srgb, #ffffff 12%, var(--baltic));
     border-radius: 999px;
@@ -949,20 +964,27 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     box-shadow: 0 6px 20px rgba(92, 110, 140, 0.35);
     transform-origin: left center;
 }
-.process-scroll__arrows { display: inline-flex; align-items: center; gap: var(--space-2); }
+.process-scroll__arrows {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: var(--space-3);
+}
 .process-scroll__btn {
-    width: 48px;
-    height: 48px;
+    width: clamp(64px, 7vw + 24px, 98px);
+    height: clamp(46px, 4vw + 28px, 62px);
     border-radius: 14px;
-    border: 1px solid color-mix(in srgb, #ffffff 28%, var(--primary));
+    border: 1px solid color-mix(in srgb, #ffffff 18%, var(--primary));
     background: color-mix(in srgb, var(--baltic) 65%, var(--kashmir));
     color: color-mix(in srgb, #ffffff 86%, var(--manatee));
     font-weight: 800;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     cursor: pointer;
     display: grid;
     place-items: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
 }
 .process-scroll__btn:focus,
 .process-scroll__btn:focus-visible {
@@ -1448,7 +1470,8 @@ footer { padding: var(--space-5) 0 var(--space-6); color: color-mix(in srgb, var
     .btn { width: 100%; justify-content: center; }
     .process-scroll__track { gap: var(--space-3); padding: var(--space-3) var(--space-3); }
     .process-slide { flex-basis: 100%; min-width: 0; max-width: none; min-height: auto; }
-    .process-scroll__controls { flex-direction: column; align-items: center; gap: var(--space-2); }
+    .process-scroll__controls { flex-direction: column; align-items: center; gap: var(--space-2); padding-inline: var(--space-3); }
+    .process-scroll__progress-wrap { padding-inline: calc(var(--space-3) + 0.4rem); margin-bottom: var(--space-2); }
     .process-scroll__arrows { justify-content: center; width: 100%; }
     .process-scroll__btn { width: 64px; height: 56px; }
     .process-scroll__progress { width: 100%; }
