@@ -332,11 +332,6 @@ if (window.gsap) {
                 const title = slide.querySelector('.process-slide__title');
                 const description = slide.querySelector('.process-slide__text');
                 const video = slide.querySelector('.process-slide__video');
-                if (title && index !== 0) {
-                    title.setAttribute('data-shadow-text', '');
-                    title.setAttribute('data-shadow-trigger', 'manual');
-                    prepareShadowText(title);
-                }
                 if (description) {
                     description.setAttribute('data-shadow-text', '');
                     description.setAttribute('data-shadow-trigger', 'manual');
@@ -436,20 +431,7 @@ if (window.gsap) {
                     clearTimeout(slide._shadowSequenceTimeout);
                     slide._shadowSequenceTimeout = null;
                 }
-                const title = slide.querySelector('.process-slide__title[data-shadow-text]');
                 const description = slide.querySelector('.process-slide__text[data-shadow-text]');
-                if (title) {
-                    triggerShadowAnimation(title);
-                    if (description) {
-                        const delayMs = Math.round(getShadowAnimationDuration(title) * 1000);
-                        slide._shadowSequenceTimeout = setTimeout(() => {
-                            slide._shadowSequenceTimeout = null;
-                            if (slide.dataset.active !== 'true' || !sliderInView) return;
-                            triggerShadowAnimation(description);
-                        }, delayMs);
-                    }
-                    return;
-                }
                 if (description) {
                     triggerShadowAnimation(description);
                 }
