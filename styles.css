@@ -1266,8 +1266,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 }
 .menu-open .mini-cta { opacity: 0.35; pointer-events: none; }
 @media (max-width: 640px) {
-    .mini-cta { right: 12px; bottom: 12px; gap: 0.35rem; }
-    .mini-cta__btn { padding: 0.7rem 1rem; font-size: 0.95rem; }
+    .mini-cta { display: none; }
 }
 
 .shop-grid {
