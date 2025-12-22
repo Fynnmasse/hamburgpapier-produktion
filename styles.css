@@ -610,6 +610,72 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     padding-inline: var(--space-4);
 }
 .section-header p { color: var(--muted); margin: 0 auto; }
+.section-header--left {
+    text-align: center;
+    align-items: center;
+    justify-items: center;
+    padding-inline: var(--space-4);
+    margin-left: 0;
+    width: 100%;
+    max-width: none;
+}
+.section-header--left h2,
+.section-header--left h3,
+.section-header--left p { text-align: center; margin-left: auto; margin-right: auto; }
+.section-list,
+.shop__list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) auto var(--space-2);
+    display: grid;
+    gap: var(--space-2);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    width: 100%;
+    text-align: left;
+}
+.section-list li,
+.shop__list li {
+    --list-accent: var(--primary);
+    position: relative;
+    display: block;
+    padding: 1rem 1.25rem 1rem 2.6rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--list-border, color-mix(in srgb, var(--list-accent) 18%, var(--border)));
+    background: linear-gradient(120deg, color-mix(in srgb, var(--list-accent) 10%, transparent), color-mix(in srgb, #ffffff 90%, var(--list-bg, transparent)));
+    box-shadow: 0 10px 24px rgba(16, 32, 58, 0.12);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.55;
+    color: inherit;
+}
+.section-list li::before,
+.shop__list li::before {
+    content: '';
+    position: absolute;
+    left: 1.1rem;
+    top: 1.1rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--list-dot, var(--list-accent, #8ba3b7));
+    border: 2px solid color-mix(in srgb, #ffffff 80%, var(--list-accent, #8ba3b7));
+    box-shadow:
+        0 0 0 6px color-mix(in srgb, var(--list-accent, #8ba3b7) 14%, transparent),
+        0 10px 18px rgba(0, 0, 0, 0.08);
+}
+#produktion .section-list {
+    --list-accent: #c9d9ee;
+    --list-bg: rgba(12, 21, 40, 0.82);
+    --list-border: rgba(255, 255, 255, 0.16);
+    --list-dot: color-mix(in srgb, #d7e3f3 70%, #7aa0c5);
+}
+.shop__list {
+    --list-accent: color-mix(in srgb, var(--primary) 70%, #0f1729);
+    --list-bg: color-mix(in srgb, #ffffff 92%, var(--panel));
+    --list-border: color-mix(in srgb, var(--primary) 24%, var(--border));
+    --list-dot: color-mix(in srgb, var(--primary) 72%, #0f1729);
+    color: var(--ink);
+}
 
 .feature-grid {
     display: grid;
@@ -657,13 +723,16 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 #produktion .container {
     width: 100%;
     margin: 0 auto;
-    padding: 0;
+    padding: 0 var(--space-4);
     position: relative;
     z-index: 1;
 }
-#produktion .section-header { width: min(var(--container-max), calc(100% - var(--space-4) * 2)); margin-left: auto; margin-right: auto; padding-inline: var(--space-4); margin-bottom: var(--space-2); }
+#produktion .section-header { width: 100%; margin-left: 0; margin-right: 0; padding-inline: var(--space-4); margin-bottom: var(--space-2); }
 #produktion .section-header { color: #ffffff; }
-#produktion .section-header p { color: color-mix(in srgb, #ffffff 72%, var(--kashmir)); }
+#produktion .section-header p { color: color-mix(in srgb, #ffffff 72%, var(--kashmir)); text-align: center; }
+#produktion .process__top { justify-content: space-between; padding-left: var(--space-4); padding-right: var(--space-4); }
+#produktion .section-header h2 { margin-bottom: var(--space-4); }
+#produktion .section-header h3 { margin-top: 0; margin-bottom: var(--space-3); }
 #produktion [data-shadow-text] {
     --shadow-base: #ffffff;
     --shadow-accent: color-mix(in srgb, var(--primary) 70%, #ffffff);
@@ -778,13 +847,13 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     background: transparent;
     border: none;
     border-radius: 0;
-    padding: clamp(2rem, 4vw, 3rem) 0;
+    padding: clamp(0.5rem, 2vw, 1.5rem) 0;
     box-shadow: none;
     overflow: visible;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: var(--space-4);
+    gap: var(--space-3);
     color: #ffffff;
 }
 
@@ -1145,8 +1214,9 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     text-align: center;
     display: grid;
     gap: var(--space-2);
-    max-width: 880px;
-    margin: 0 auto var(--space-6);
+    width: 100%;
+    max-width: none;
+    margin: 0 0 var(--space-6);
     position: relative;
     z-index: 1;
     align-items: center;
