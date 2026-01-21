@@ -1,5 +1,4 @@
-﻿
-// Inhalt aus script.js
+﻿// Inhalt aus script.js
 const prefersReducedMotion = window.matchMedia
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
@@ -89,9 +88,35 @@ if (window.gsap) {
     const ring = document.querySelector('.preloader__ring');
     const preloaderState = { value: 0 };
     let introPlayed = false;
+    let introQueued = false;
+    const heroVideo = document.querySelector('.hero video');
+    const heroContent = document.querySelector('.hero__content');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const introEase = prefersReduced ? 'power1.out' : 'power3.out';
+    const introDurations = {
+        video: prefersReduced ? 0.4 : 2.2,
+        content: prefersReduced ? 0.4 : 1.4,
+        subtitle: prefersReduced ? 0.35 : 1.1
+    };
 
-    gsap.set('.hero video', { autoAlpha: 0, scale: 1.05, filter: 'blur(6px) saturate(1.05)' });
-    gsap.set('.hero__content', { autoAlpha: 0, y: 34 });
+    if (heroVideo) {
+        gsap.set(heroVideo, {
+            autoAlpha: 0,
+            scale: 1.06,
+            filter: 'saturate(1.05)',
+            transformOrigin: '50% 50%',
+            willChange: 'transform, opacity',
+            force3D: true
+        });
+    }
+    if (heroContent) {
+        gsap.set(heroContent, {
+            autoAlpha: 0,
+            y: 36,
+            willChange: 'transform, opacity',
+            force3D: true
+        });
+    }
 
     const updateProgress = (value) => {
         if (!progressFill) return;
@@ -103,11 +128,37 @@ if (window.gsap) {
     const playIntro = () => {
         if (introPlayed) return;
         introPlayed = true;
-        const introTl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-        introTl
-            .to('.hero video', { autoAlpha: 1, scale: 1, filter: 'blur(0px) saturate(1.05)', duration: 2.8 }, 0)
-            .to('.hero__content', { autoAlpha: 1, y: 0, duration: 1.8 }, 0.9)
-            .from('.hero-subtitle', { autoAlpha: 0, y: 22, duration: 1.3 }, '-=0.8');
+        const introTl = gsap.timeline({ defaults: { ease: introEase } });
+        if (heroVideo) {
+            introTl.to(heroVideo, { autoAlpha: 1, scale: 1, duration: introDurations.video }, 0);
+        }
+        if (heroContent) {
+            introTl.to(heroContent, { autoAlpha: 1, y: 0, duration: introDurations.content }, prefersReduced ? 0 : 0.45);
+        }
+        if (heroSubtitle) {
+            introTl.from(heroSubtitle, { autoAlpha: 0, y: 16, duration: introDurations.subtitle }, prefersReduced ? 0.1 : 0.6);
+        }
+    };
+
+    const startIntro = () => {
+        if (introPlayed || introQueued) return;
+        if (!heroVideo || prefersReduced) {
+            playIntro();
+            return;
+        }
+        if (heroVideo.readyState >= 2) {
+            playIntro();
+            return;
+        }
+        introQueued = true;
+        let fallbackId = 0;
+        const handleReady = () => {
+            if (fallbackId) clearTimeout(fallbackId);
+            introQueued = false;
+            playIntro();
+        };
+        fallbackId = window.setTimeout(handleReady, 1200);
+        heroVideo.addEventListener('loadeddata', handleReady, { once: true });
     };
 
     if (preloader) {
@@ -127,7 +178,7 @@ if (window.gsap) {
                     preloader.classList.add('is-hidden');
                     document.body.classList.remove('is-preloading');
                     setTimeout(() => preloader.remove(), 700);
-                    playIntro();
+                    startIntro();
                 }
             })
                 .to('.preloader__badge', { y: prefersReduced ? 0 : -10, duration: prefersReduced ? 0.4 : 0.75 }, '-=0.2')
@@ -138,7 +189,7 @@ if (window.gsap) {
         setTimeout(hidePreloader, 11000);
     } else {
         document.body.classList.remove('is-preloading');
-        playIntro();
+        startIntro();
     }
 
     // Smooth scrolling with inertia (Luxy-like)
@@ -152,10 +203,12 @@ if (window.gsap) {
         if (prefersReduced || isTouchPrimary || lowPower) return;
 
         document.body.classList.add('smooth-scroll-enabled');
+        scroller.style.transform = 'translate3d(0, 0, 0)';
 
         let target = window.scrollY;
         let current = window.scrollY;
         const ease = 0.12;
+        const hasScrollTrigger = typeof ScrollTrigger !== 'undefined';
 
         const setHeight = () => {
             const height = Math.max(scroller.scrollHeight, window.innerHeight);
@@ -167,11 +220,30 @@ if (window.gsap) {
         resizeObserver.observe(scroller);
         window.addEventListener('resize', setHeight);
 
+        if (hasScrollTrigger) {
+            ScrollTrigger.scrollerProxy(scroller, {
+                scrollTop(value) {
+                    if (arguments.length) {
+                        window.scrollTo(0, value);
+                    }
+                    return current;
+                },
+                getBoundingClientRect() {
+                    return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+                },
+                pinType: 'transform'
+            });
+            ScrollTrigger.defaults({ scroller });
+            ScrollTrigger.addEventListener('refresh', setHeight);
+            ScrollTrigger.refresh();
+        }
+
         const raf = () => {
             target = window.scrollY;
             current += (target - current) * ease;
             if (Math.abs(target - current) < 0.1) current = target;
             scroller.style.transform = `translate3d(0, ${-current}px, 0)`;
+            if (hasScrollTrigger) ScrollTrigger.update();
             requestAnimationFrame(raf);
         };
         raf();
@@ -200,7 +272,6 @@ if (window.gsap) {
         scrollToHash(window.location.hash);
     }
 
-    const heroVideo = document.querySelector('.hero video');
     if (heroVideo) {
         heroVideo.muted = true;
         heroVideo.setAttribute('playsinline', '');
@@ -786,6 +857,195 @@ const initShadowText = () => {
     });
 };
 
+const initGroovyShopScroll = () => {
+    const section = document.querySelector('.shop.shop-groovy');
+    if (!section) return;
+
+    const stickyParent = section.querySelector('.sticky-parent');
+    const stickyChild = section.querySelector('.sticky-child');
+    const scrollParent = section.querySelector('.scroll-h-parent');
+    const setReady = () => section.classList.add('shop-groovy--ready');
+
+    if (!stickyParent || !stickyChild || !scrollParent || !window.gsap || !window.ScrollTrigger) {
+        setReady();
+        return;
+    }
+
+    if (prefersReducedMotion) {
+        setReady();
+        return;
+    }
+
+    ScrollTrigger.create({
+        trigger: section,
+        start: 'top 85%',
+        onEnter: setReady,
+        onEnterBack: setReady
+    });
+
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 992px)', () => {
+        section.classList.add('is-pinned');
+        const heroText = section.querySelector('.hero-text-parent');
+        const shopLetters = heroText ? heroText.querySelectorAll('.super-text .span-text-out') : [];
+
+        const pinTrigger = ScrollTrigger.create({
+            trigger: stickyParent,
+            start: 'top top',
+            end: 'bottom bottom',
+            pin: stickyChild,
+            pinSpacing: true,
+            anticipatePin: 1,
+            onEnter: setReady,
+            onEnterBack: setReady
+        });
+
+        const scrollTween = gsap.to(scrollParent, {
+            '--shop-scroll-x': '-38%',
+            ease: 'none',
+            scrollTrigger: {
+                trigger: stickyParent,
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: true
+            }
+        });
+
+        const parallaxTween = gsap.to(section, {
+            '--shop-card-parallax': '-6%',
+            ease: 'none',
+            scrollTrigger: {
+                trigger: stickyParent,
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: true
+            }
+        });
+
+        const heroShiftTween = heroText
+            ? gsap.to(heroText, {
+                yPercent: 8,
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: stickyParent,
+                    start: 'top top',
+                    end: 'top+=35%',
+                    scrub: true
+                }
+            })
+            : null;
+
+        const heroWordTween = shopLetters.length
+            ? gsap.to(shopLetters, {
+                yPercent: 40,
+                autoAlpha: 0,
+                ease: 'none',
+                stagger: { each: 0.08 },
+                scrollTrigger: {
+                    trigger: stickyParent,
+                    start: 'top top',
+                    end: 'top+=35%',
+                    scrub: true
+                }
+            })
+            : null;
+
+        return () => {
+            pinTrigger.kill();
+            scrollTween.kill();
+            parallaxTween.kill();
+            if (heroShiftTween) heroShiftTween.kill();
+            if (heroWordTween) heroWordTween.kill();
+            section.classList.remove('is-pinned');
+        };
+    });
+
+    mm.add('(max-width: 991px)', () => {
+        const heroText = section.querySelector('.hero-text-parent');
+        const shopLetters = heroText ? heroText.querySelectorAll('.super-text .span-text-out') : [];
+        const heroShiftTween = heroText
+            ? gsap.to(heroText, {
+                yPercent: 6,
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top top',
+                    end: 'top+=45%',
+                    scrub: true
+                }
+            })
+            : null;
+        const heroWordTween = shopLetters.length
+            ? gsap.to(shopLetters, {
+                yPercent: 35,
+                autoAlpha: 0,
+                ease: 'none',
+                stagger: { each: 0.08 },
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top top',
+                    end: 'top+=45%',
+                    scrub: true
+                }
+            })
+            : null;
+        setReady();
+        return () => {
+            if (heroShiftTween) heroShiftTween.kill();
+            if (heroWordTween) heroWordTween.kill();
+        };
+    });
+};
+
+const fitShopCardTitles = () => {
+    const wrappers = Array.from(document.querySelectorAll('.shop-card .card-content-title'));
+    if (!wrappers.length) return;
+
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const minSize = rootFontSize * 0.85;
+
+    wrappers.forEach((wrapper) => {
+        const title = wrapper.querySelector('.shop-card__title');
+        if (!title) return;
+
+        wrapper.style.removeProperty('--card-title-size');
+        const maxSize = parseFloat(getComputedStyle(title).fontSize);
+        if (!Number.isFinite(maxSize)) return;
+
+        const available = wrapper.clientWidth;
+        if (!available) return;
+
+        wrapper.style.setProperty('--card-title-size', `${maxSize}px`);
+        const baseWidth = title.scrollWidth;
+        if (!baseWidth || baseWidth <= available) return;
+
+        const scaledSize = Math.max(minSize, Math.floor(maxSize * (available / baseWidth)));
+        wrapper.style.setProperty('--card-title-size', `${scaledSize}px`);
+
+        let currentSize = scaledSize;
+        while (currentSize > minSize && title.scrollWidth > available) {
+            currentSize -= 1;
+            wrapper.style.setProperty('--card-title-size', `${currentSize}px`);
+        }
+    });
+};
+
+const scheduleFitShopCardTitles = () => {
+    if (scheduleFitShopCardTitles._raf) cancelAnimationFrame(scheduleFitShopCardTitles._raf);
+    scheduleFitShopCardTitles._raf = requestAnimationFrame(() => {
+        scheduleFitShopCardTitles._raf = null;
+        fitShopCardTitles();
+    });
+};
+
 initHoverVideos();
 initFaqAccordion();
 initShadowText();
+initGroovyShopScroll();
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(scheduleFitShopCardTitles);
+} else {
+    window.addEventListener('load', scheduleFitShopCardTitles);
+}
+window.addEventListener('resize', scheduleFitShopCardTitles);
+
