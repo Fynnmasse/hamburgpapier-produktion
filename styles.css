@@ -1327,7 +1327,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: scroll;
-    font-family: 'Mori Extra Bold', sans-serif;
+    font-family: 'Comfortaa', sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
     line-height: 1;
@@ -1339,7 +1339,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 .shop.shop-groovy h1,
 .shop.shop-groovy h2,
 .shop.shop-groovy h3 { margin: 0; font-weight: 700; }
-.shop.shop-groovy p { margin: 0; font-family: 'Mori Book', sans-serif; font-weight: 400; }
+.shop.shop-groovy p { margin: 0; font-family: 'Comfortaa', sans-serif; font-weight: 400; }
 
 .shop-groovy .sticky-parent {
     width: 100%;
