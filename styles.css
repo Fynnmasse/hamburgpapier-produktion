@@ -1350,7 +1350,8 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     height: 100vh;
     position: sticky;
     top: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
 }
 .shop-groovy.is-pinned .sticky-child {
     position: relative;
@@ -1411,7 +1412,8 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 .shop-groovy .scroll-h-child {
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
     transform: translate3d(-100vw, 0, 0);
     transition: transform var(--shop-reveal-duration) var(--shop-reveal-ease);
 }
@@ -1757,6 +1759,17 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     display: block;
     isolation: isolate;
 }
+.shop-card-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+}
+
+.shop-card-stack .shop-card {
+    width: 100%;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
 .shop-card:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--primary) 70%, #ffffff);
     outline-offset: 4px;
@@ -1838,6 +1851,22 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     text-overflow: ellipsis;
     transition: opacity 0.2s ease;
 }
+
+.shop-card__meta {
+    list-style: none;
+    margin: 0;
+    padding: 0.85rem 1rem 1rem;
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: color-mix(in srgb, #ffffff 88%, transparent);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0a2d47;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.shop-card__meta li { margin: 0; }
+.shop-card__meta strong { color: #ffffff; font-weight: 600; }
 
 .card-button-wrapper {
     position: absolute;
