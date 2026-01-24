@@ -1186,6 +1186,13 @@ const syncShopCardMetaHeights = () => {
     const metaBlocks = Array.from(document.querySelectorAll('.shop-card__meta'));
     if (!metaBlocks.length) return;
 
+    if (window.matchMedia && window.matchMedia('(max-width: 991px)').matches) {
+        metaBlocks.forEach((meta) => {
+            meta.style.height = '';
+        });
+        return;
+    }
+
     metaBlocks.forEach((meta) => {
         meta.style.height = '';
     });
