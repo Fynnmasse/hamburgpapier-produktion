@@ -1690,6 +1690,14 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
         flex: 0 0 auto;
         width: 100%;
     }
+    .shop-groovy .scroll-h-child {
+        overflow: visible;
+    }
+    .shop-groovy .shop-card__meta {
+        height: auto !important;
+        max-height: none;
+        overflow: visible;
+    }
     .shop-groovy .scroll-h-child.one { display: none; }
     .shop-groovy .shop-scroll__wrap { height: auto; }
     .shop-groovy .shop-scroll__controls { display: none; }
