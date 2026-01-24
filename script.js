@@ -1091,6 +1091,7 @@ const initGroovyShopScroll = () => {
     });
 
     mm.add('(max-width: 991px)', () => {
+        section.classList.add('is-pinned');
         const heroText = section.querySelector('.hero-text-parent');
         const shopLetters = heroText ? heroText.querySelectorAll('.super-text .span-text-out') : [];
         const heroShiftTween = heroText
@@ -1119,10 +1120,67 @@ const initGroovyShopScroll = () => {
                 }
             })
             : null;
+        const getShift = () => Math.max(0, scrollParent.scrollWidth - stickyChild.clientWidth);
+        const getScrollDistance = () => {
+            const shift = getShift();
+            return shift > 0 ? shift : Math.max(0, stickyChild.clientWidth * 0.4);
+        };
+        const getSnapStep = () => {
+            const items = scrollParent.querySelectorAll('.scroll-h-child');
+            const count = items.length;
+            return count > 1 ? 1 / (count - 1) : 1;
+        };
+        const snapToStep = (value) => {
+            const step = getSnapStep();
+            if (!step || !Number.isFinite(step)) return value;
+            return Math.min(1, Math.max(0, Math.round(value / step) * step));
+        };
+        const pinTrigger = ScrollTrigger.create({
+            trigger: stickyParent,
+            start: 'top top',
+            end: () => `+=${getScrollDistance()}`,
+            pin: stickyChild,
+            pinSpacing: true,
+            anticipatePin: 1,
+            onEnter: setReady,
+            onEnterBack: setReady
+        });
+        const scrollTween = gsap.to(scrollParent, {
+            '--shop-scroll-x': () => `${-getShift()}px`,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: stickyParent,
+                start: 'top top',
+                end: () => `+=${getScrollDistance()}`,
+                scrub: true,
+                snap: {
+                    snapTo: snapToStep,
+                    duration: { min: 0.15, max: 0.35 },
+                    delay: 0.05,
+                    ease: 'power1.inOut'
+                },
+                invalidateOnRefresh: true
+            }
+        });
+        const parallaxTween = gsap.to(section, {
+            '--shop-card-parallax': '-4%',
+            ease: 'none',
+            scrollTrigger: {
+                trigger: stickyParent,
+                start: 'top top',
+                end: () => `+=${getScrollDistance()}`,
+                scrub: true,
+                invalidateOnRefresh: true
+            }
+        });
         setReady();
         return () => {
+            pinTrigger.kill();
+            scrollTween.kill();
+            parallaxTween.kill();
             if (heroShiftTween) heroShiftTween.kill();
             if (heroWordTween) heroWordTween.kill();
+            section.classList.remove('is-pinned');
         };
     });
 };

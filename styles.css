@@ -1614,7 +1614,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 
 @media (max-width: 991px) {
     .shop-groovy .sticky-child {
-        overflow-x: visible;
+        overflow-x: hidden;
     }
     .shop-groovy .shop-intro {
         position: relative;
@@ -1628,30 +1628,33 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     .shop-groovy .sticky-parent { height: auto; }
     .shop-groovy .sticky-child.page-padding {
         height: auto;
-        padding-top: 12rem;
+        min-height: 100vh;
+        padding-top: clamp(3rem, 6vh, 4.5rem);
+        padding-bottom: clamp(2rem, 5vh, 3.5rem);
         position: relative;
+        display: flex;
+        flex-direction: column;
     }
     .shop-groovy .scroll-h-parent {
         grid-row-gap: 0;
         flex-direction: row;
-        align-items: stretch;
+        align-items: center;
         gap: var(--space-3);
-        width: 100%;
+        width: max(160%, 100%);
         height: auto;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-        touch-action: pan-x;
+        overflow: visible;
         padding-inline: var(--space-2);
         padding-bottom: var(--space-2);
-        transform: none;
+        touch-action: pan-y;
+        flex: 1;
     }
     .shop-groovy .scroll-h-child {
         transform: translate3d(0, 0, 0);
         flex: 0 0 clamp(17rem, 75vw, 24rem);
-        scroll-snap-align: start;
+    }
+    .shop-groovy .scroll-h-child.flex-cc {
+        padding-top: clamp(0.75rem, 2vh, 1.5rem);
+        padding-bottom: clamp(0.75rem, 2vh, 1.5rem);
     }
     .shop-groovy .div-hide.pad { padding-left: 0.7rem; }
     .shop-groovy .div-hide.pad-two {
