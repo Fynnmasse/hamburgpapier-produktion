@@ -1879,6 +1879,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     pointer-events: none;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
     transform: translate(-50%, -50%);
+    opacity: 0;
     transition: opacity 0.2s ease;
 }
 
@@ -1952,7 +1953,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     }
     .shop-card .card-content-title { opacity: 1; }
     .shop-card:hover::before,
-    .shop-card:focus-visible::before { opacity: 0; }
+    .shop-card:focus-visible::before { opacity: 1; }
 
     .shop-card:hover .card-transition-block,
     .shop-card:focus-visible .card-transition-block { transform: translateY(-100%) scale(1); }
