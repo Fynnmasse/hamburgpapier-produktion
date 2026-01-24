@@ -1410,6 +1410,47 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     transition: opacity var(--shop-reveal-opacity-duration) var(--shop-reveal-ease);
     will-change: transform;
 }
+.shop-groovy .shop-scroll__wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.shop-groovy .shop-scroll__controls {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: clamp(0.4rem, 2.5vw, 1.1rem);
+    pointer-events: none;
+    z-index: 6;
+}
+.shop-groovy .shop-scroll__btn {
+    pointer-events: auto;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(10, 45, 71, 0.25);
+    background: rgba(255, 255, 255, 0.95);
+    color: #0a2d47;
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.shop-groovy .shop-scroll__btn:disabled {
+    opacity: 0.35;
+    box-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) {
+    .shop-groovy .shop-scroll__btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
+    }
+}
 .shop-groovy .scroll-h-child {
     flex: 1;
     position: relative;
@@ -1614,7 +1655,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 
 @media (max-width: 991px) {
     .shop-groovy .sticky-child {
-        overflow-x: hidden;
+        overflow-x: visible;
     }
     .shop-groovy .shop-intro {
         position: relative;
@@ -1628,34 +1669,35 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
     .shop-groovy .sticky-parent { height: auto; }
     .shop-groovy .sticky-child.page-padding {
         height: auto;
-        min-height: 100vh;
-        padding-top: clamp(3rem, 6vh, 4.5rem);
-        padding-bottom: clamp(2rem, 5vh, 3.5rem);
+        padding-top: 12rem;
         position: relative;
-        display: flex;
-        flex-direction: column;
     }
     .shop-groovy .scroll-h-parent {
         grid-row-gap: 0;
         flex-direction: row;
-        align-items: center;
+        align-items: stretch;
         gap: var(--space-3);
-        width: max(160%, 100%);
+        width: 100%;
         height: auto;
-        overflow: visible;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-snap-stop: always;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
         padding-inline: var(--space-2);
         padding-bottom: var(--space-2);
-        touch-action: pan-y;
-        flex: 1;
+        transform: none;
     }
     .shop-groovy .scroll-h-child {
         transform: translate3d(0, 0, 0);
         flex: 0 0 clamp(17rem, 75vw, 24rem);
+        scroll-snap-align: start;
     }
-    .shop-groovy .scroll-h-child.flex-cc {
-        padding-top: clamp(0.75rem, 2vh, 1.5rem);
-        padding-bottom: clamp(0.75rem, 2vh, 1.5rem);
-    }
+    .shop-groovy .scroll-h-child.one { display: none; }
+    .shop-groovy .shop-scroll__wrap { height: auto; }
+    .shop-groovy .shop-scroll__controls { display: flex; }
     .shop-groovy .div-hide.pad { padding-left: 0.7rem; }
     .shop-groovy .div-hide.pad-two {
         margin-left: -1.3rem;
