@@ -3,6 +3,62 @@ const prefersReducedMotion = window.matchMedia
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
 
+const initHeroVideoRotation = () => {
+    const heroVideo = document.querySelector('.hero video');
+    if (!heroVideo) return;
+
+    const rawList = heroVideo.dataset.heroVideos ? heroVideo.dataset.heroVideos.trim() : '';
+    if (!rawList) return;
+
+    let sources = [];
+    if (rawList.startsWith('[')) {
+        try {
+            sources = JSON.parse(rawList);
+        } catch (error) {
+            sources = [];
+        }
+    } else {
+        sources = rawList.split('|');
+    }
+
+    sources = sources.map((source) => source.trim()).filter(Boolean);
+    if (!sources.length) return;
+
+    let lastPick = '';
+    try {
+        lastPick = window.localStorage.getItem('hero-video-last') || '';
+    } catch (error) {
+        lastPick = '';
+    }
+
+    let candidates = sources;
+    if (sources.length > 1 && lastPick) {
+        const filtered = sources.filter((source) => source !== lastPick);
+        if (filtered.length) candidates = filtered;
+    }
+
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!pick) return;
+
+    if (pick !== heroVideo.getAttribute('src')) {
+        heroVideo.setAttribute('src', pick);
+        heroVideo.load();
+    }
+
+    try {
+        window.localStorage.setItem('hero-video-last', pick);
+    } catch (error) {
+        // Ignore storage errors (private mode, disabled storage).
+    }
+
+    const playPromise = heroVideo.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+    }
+};
+
+initHeroVideoRotation();
+
 const prepareShadowText = (target) => {
     if (!target || target.dataset.shadowReady === 'true') return;
     const rawText = target.textContent;
@@ -424,12 +480,47 @@ if (window.gsap) {
                     video.setAttribute('title', label);
                 }
             });
-            const ensureVideoLoaded = (idx) => {
+            const ensureVideoLoaded = (idx, aggressive = false) => {
                 const video = slideVideos[idx];
-                if (!video || video.dataset.loaded === 'true') return;
-                video.preload = 'metadata';
-                video.load();
-                video.dataset.loaded = 'true';
+                if (!video) return;
+                const targetPreload = aggressive ? 'auto' : 'metadata';
+                if (video.preload !== targetPreload) {
+                    video.preload = targetPreload;
+                }
+                if (video.dataset.loaded !== 'true' || aggressive) {
+                    video.load();
+                    video.dataset.loaded = 'true';
+                }
+            };
+            const primeFrame = (video) => {
+                if (!video || video.dataset.framePrimed === 'true') return;
+                const prime = () => {
+                    if (video.dataset.framePrimed === 'true') return;
+                    if (!video.paused) {
+                        video.dataset.framePrimed = 'true';
+                        return;
+                    }
+                    const safeTime = Number.isFinite(video.duration) && video.duration > 0
+                        ? Math.min(0.05, Math.max(0, video.duration * 0.01))
+                        : 0.01;
+                    try {
+                        video.currentTime = safeTime;
+                    } catch (_) {
+                        // Ignore seek errors.
+                    }
+                    video.pause();
+                    video.dataset.framePrimed = 'true';
+                };
+                if (video.readyState >= 2) {
+                    prime();
+                } else {
+                    video.addEventListener('loadeddata', prime, { once: true });
+                }
+            };
+            const warmNeighborVideos = (idx) => {
+                ensureVideoLoaded(idx, true);
+                ensureVideoLoaded(idx - 1, true);
+                ensureVideoLoaded(idx + 1, true);
             };
             const playIfActive = (video, idx) => {
                 if (activeIndex === idx && video && video.paused) {
@@ -450,18 +541,23 @@ if (window.gsap) {
                 }, { root: null, rootMargin: '200px 0px', threshold: 0.2 })
                 : null;
             slideVideos.forEach((video, idx) => {
-                video.preload = idx === 0 ? 'metadata' : 'none';
+                const prime = video.dataset.primeFrame === 'true';
+                video.preload = prime || idx === 0 ? 'auto' : 'metadata';
                 video.muted = true;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('webkit-playsinline', '');
                 if (videoObserver && idx !== 0) videoObserver.observe(video);
                 const markReady = () => {
                     video.classList.add('is-ready');
+                    if (prime) primeFrame(video);
                 };
                 if (video.readyState >= 2) {
                     markReady();
                 } else {
                     video.addEventListener('loadeddata', markReady, { once: true });
+                }
+                if (prime) {
+                    ensureVideoLoaded(idx, true);
                 }
             });
             let position = 0;
@@ -476,10 +572,15 @@ if (window.gsap) {
             let snapTween = null;
 
             let positions = [];
+            let positionsDirty = true;
+            let pendingRender = null;
+            let pendingRenderPos = 0;
+            let refreshRaf = null;
 
             const computePositions = () => {
                 const base = slides[0] ? slides[0].offsetLeft : 0;
                 positions = slides.map((s) => s.offsetLeft - base);
+                positionsDirty = false;
             };
             const slideWidthAt = (idx) => (slides[idx] ? slides[idx].getBoundingClientRect().width : 0);
             const updateEndPadding = () => {
@@ -540,10 +641,17 @@ if (window.gsap) {
                     const title = slide.querySelector('.process-slide__title');
                     if (video) {
                         if (isActive) {
+                            warmNeighborVideos(activeIndex);
+                            if (video.readyState > 0) {
+                                video.currentTime = 0;
+                            } else {
+                                video.addEventListener('loadedmetadata', () => {
+                                    video.currentTime = 0;
+                                }, { once: true });
+                            }
                             if (sliderInView) video.play().catch(() => {});
                         } else {
                             video.pause();
-                            video.currentTime = 0;
                         }
                     }
                     if (!isActive) {
@@ -586,6 +694,14 @@ if (window.gsap) {
                 if (idx !== activeIndex) setActive(idx);
                 updateProgress(position);
             };
+            const scheduleRender = (pos) => {
+                pendingRenderPos = pos;
+                if (pendingRender) return;
+                pendingRender = requestAnimationFrame(() => {
+                    pendingRender = null;
+                    render(pendingRenderPos);
+                });
+            };
 
             viewport.addEventListener('pointerdown', (evt) => {
                 if (snapTween) snapTween.kill();
@@ -602,7 +718,7 @@ if (window.gsap) {
                 if (!isDragging) return;
                 dragDelta = startX - evt.clientX;
                 if (Math.abs(evt.movementX) > 2 || Math.abs(evt.movementY) > 2) pointerMoved = true;
-                render(startPosition + dragDelta);
+                scheduleRender(startPosition + dragDelta);
             });
             window.addEventListener('pointerup', (evt) => {
                 if (!isDragging) return;
@@ -628,7 +744,10 @@ if (window.gsap) {
             slider.addEventListener('dragstart', (e) => e.preventDefault());
 
             const snapTo = (idx, options = {}) => {
-                if (!positions.length) computePositions();
+                if (!positions.length || positionsDirty) {
+                    updateEndPadding();
+                    computePositions();
+                }
                 const { force = false } = options;
                 const max = maxOffset();
                 const targetIndex = Math.min(slides.length - 1, Math.max(0, idx));
@@ -654,8 +773,6 @@ if (window.gsap) {
             };
 
             buttons.forEach((btn) => btn.addEventListener('click', () => {
-                updateEndPadding();
-                computePositions();
                 const dir = btn.dataset.dir === 'next' ? 1 : -1;
                 const baseIndex = currentIndex();
                 snapTo(baseIndex + dir, { force: true });
@@ -684,15 +801,28 @@ if (window.gsap) {
                 computePositions();
                 render(position);
             };
-            window.addEventListener('resize', refreshPositions);
-            window.addEventListener('load', refreshPositions);
+            const scheduleRefresh = () => {
+                positionsDirty = true;
+                if (refreshRaf) return;
+                refreshRaf = requestAnimationFrame(() => {
+                    refreshRaf = null;
+                    refreshPositions();
+                });
+            };
+            window.addEventListener('resize', scheduleRefresh);
+            window.addEventListener('load', scheduleRefresh);
+            if ('ResizeObserver' in window) {
+                const ro = new ResizeObserver(scheduleRefresh);
+                ro.observe(viewport);
+                ro.observe(track);
+            }
             slides.forEach((slide) => {
                 const img = slide.querySelector('img');
                 if (img) {
                     if (img.complete) {
-                        refreshPositions();
+                        scheduleRefresh();
                     } else {
-                        img.addEventListener('load', refreshPositions, { once: true });
+                        img.addEventListener('load', scheduleRefresh, { once: true });
                     }
                 }
             });
@@ -700,7 +830,7 @@ if (window.gsap) {
             computePositions();
             render(0);
             setActive(0, true);
-            ensureVideoLoaded(0);
+            warmNeighborVideos(0);
             const initialVideo = slideVideos[0];
             if (initialVideo) {
                 const p = initialVideo.play();
@@ -1002,7 +1132,7 @@ const fitShopCardTitles = () => {
     if (!wrappers.length) return;
 
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const minSize = rootFontSize * 0.85;
+    const minSize = rootFontSize * 0.72;
 
     wrappers.forEach((wrapper) => {
         const title = wrapper.querySelector('.shop-card__title');
@@ -1030,11 +1160,33 @@ const fitShopCardTitles = () => {
     });
 };
 
+const syncShopCardMetaHeights = () => {
+    const metaBlocks = Array.from(document.querySelectorAll('.shop-card__meta'));
+    if (!metaBlocks.length) return;
+
+    metaBlocks.forEach((meta) => {
+        meta.style.height = '';
+    });
+
+    let maxHeight = 0;
+    metaBlocks.forEach((meta) => {
+        const rect = meta.getBoundingClientRect();
+        if (rect.height > maxHeight) maxHeight = rect.height;
+    });
+
+    if (maxHeight > 0) {
+        metaBlocks.forEach((meta) => {
+            meta.style.height = `${Math.ceil(maxHeight)}px`;
+        });
+    }
+};
+
 const scheduleFitShopCardTitles = () => {
     if (scheduleFitShopCardTitles._raf) cancelAnimationFrame(scheduleFitShopCardTitles._raf);
     scheduleFitShopCardTitles._raf = requestAnimationFrame(() => {
         scheduleFitShopCardTitles._raf = null;
         fitShopCardTitles();
+        syncShopCardMetaHeights();
     });
 };
 
