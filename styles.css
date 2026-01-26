@@ -1343,7 +1343,7 @@ section { padding: clamp(3rem, 6vw, 5rem) 0; }
 
 .shop-groovy .sticky-parent {
     width: 100%;
-    height: 400vh;
+    height: 260vh;
 }
 .shop-groovy .sticky-child {
     width: 100%;
