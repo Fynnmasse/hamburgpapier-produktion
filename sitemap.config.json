@@ -1,0 +1,13 @@
+{
+  "baseUrl": "https://hamburgpapier-shop-produktion.de",
+  "lastmodStrategy": "site",
+  "include": [
+    "index.html",
+    "googleabcc2980b3f73932.html"
+  ],
+  "excludeDirs": [
+    ".git",
+    ".github",
+    "node_modules"
+  ]
+}

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hamburgpapier-shop-produktion.de/sitemap.xml
