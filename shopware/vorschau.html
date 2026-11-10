@@ -81,6 +81,17 @@
             var params = new URLSearchParams(location.search);
             if (params.get('sticky') === '1') { document.body.classList.add('vorschau-sticky'); }
 
+            if (params.get('reduced') === '1') {
+                /* Test: so tun, als hätte der Besucher „Bewegung reduzieren" eingestellt (nur für das Skript) */
+                var realMatchMedia = window.matchMedia.bind(window);
+                window.matchMedia = function (query) {
+                    if (/prefers-reduced-motion/.test(query)) {
+                        return { matches: true, media: query, addEventListener: function () {}, removeEventListener: function () {}, addListener: function () {}, removeListener: function () {} };
+                    }
+                    return realMatchMedia(query);
+                };
+            }
+
             if (params.get('stub') === '1') {
                 /* Für automatische Tests in einem nicht sichtbaren Fenster: dort laufen
                    weder requestAnimationFrame noch IntersectionObserver noch Übergänge. */
@@ -113,19 +124,23 @@
                 var rect = function (sel) { var el = root.querySelector(sel); return el ? el.getBoundingClientRect() : null; };
                 var px = function (sel, prop) { var el = root.querySelector(sel); return el ? Math.round(parseFloat(getComputedStyle(el)[prop]) * 10) / 10 : null; };
                 var lines = function (sel) { var el = root.querySelector(sel); if (!el) { return null; } return Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)); };
-                var pinned = root.classList.contains('hpp--pin');
+                var perRow = function (sel) {
+                    var tops = Array.prototype.slice.call(root.querySelectorAll(sel)).map(function (el) { return Math.round(el.getBoundingClientRect().top); });
+                    return tops.filter(function (t) { return t === tops[0]; }).length;
+                };
                 var out = { size: window.innerWidth + 'x' + vh, mode: root.className.replace(/^hpp\s*/, ''), hscroll: document.documentElement.scrollWidth - cw };
 
                 var outside = [];
                 var clipped = [];
                 Array.prototype.forEach.call(root.querySelectorAll('*'), function (el) {
-                    if (el.closest('.hpp-slider__track') || el.closest('.hpp-sr-only') || el.classList.contains('hpp-sr-only')) { return; }
+                    var inTrack = !!el.closest('.hpp-slider__track');
                     var r = el.getBoundingClientRect();
                     if (!r.width || !r.height) { return; }
-                    if (!(pinned && el.closest('.hpp-shop__rail')) && (r.right > cw + 1 || r.left < -1)) {
+                    if (!inTrack && (r.right > cw + 1 || r.left < -1)) {
                         outside.push(name(el) + ' ' + Math.round(r.left) + '..' + Math.round(r.right));
                     }
-                    if (/^(H1|H2|H3|P|LI|A|BUTTON|DIV)$/.test(el.tagName) && el.children.length < 6 && el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX === 'visible' && !el.classList.contains('hpp-shop__rail-wrap') && !(pinned && el.closest('.hpp-shop__rail'))) {
+                    if (/^(H1|H2|H3|P|LI|A|BUTTON|SPAN|DIV)$/.test(el.tagName) && el.children.length < 6 && el.scrollWidth > el.clientWidth + 1
+                        && getComputedStyle(el).overflowX === 'visible' && getComputedStyle(el).display !== 'inline' && !el.classList.contains('hpp-slider__track')) {
                         clipped.push(name(el) + ' ' + el.scrollWidth + '>' + el.clientWidth);
                     }
                 });
@@ -133,32 +148,31 @@
                 out.clipped = clipped.slice(0, 8);
 
                 var hero = rect('.hpp-hero');
-                var heroContent = rect('.hpp-hero__content');
-                out.hero = { h: Math.round(hero.height), fold: Math.round(hero.bottom + window.pageYOffset - vh), contentH: Math.round(heroContent.height), title: px('.hpp-hero__title', 'fontSize') + 'px/' + lines('.hpp-hero__title') + 'Z', titleW: Math.round(rect('.hpp-hero__title').width), sub: px('.hpp-hero__subtitle', 'fontSize') + 'px/' + lines('.hpp-hero__subtitle') + 'Z' };
+                out.hero = {
+                    h: Math.round(hero.height),
+                    fold: Math.round(hero.bottom + window.pageYOffset - vh),
+                    videoH: Math.round(rect('.hpp-hero__media').height),
+                    title: px('.hpp-hero__title', 'fontSize') + 'px/' + lines('.hpp-hero__title') + 'Z',
+                    lead: lines('.hpp-hero__lead') + 'Z'
+                };
+                out.intro = { w: Math.round(rect('.hpp-intro').width), h2: px('.hpp-band__title', 'fontSize') + 'px/' + lines('.hpp-band__title') + 'Z' };
 
                 var slide = rect('.hpp-slide');
                 var viewport = rect('.hpp-slider__viewport');
-                out.slider = { slideW: Math.round(slide.width), slideH: Math.round(slide.height), viewportW: Math.round(viewport.width), videoH: Math.round(rect('.hpp-slide__video').height), h2: px('.hpp-prod h2', 'fontSize') };
-
-                var cards = Array.prototype.slice.call(root.querySelectorAll('.hpp-shop__cell--card'));
-                var tops = cards.map(function (c) { return Math.round(c.getBoundingClientRect().top); });
-                var perRow = tops.filter(function (t) { return t === tops[0]; }).length;
-                var card = rect('.hpp-card');
-                var stack = rect('.hpp-card-stack');
-                var pin = rect('.hpp-shop__pin');
-                out.shop = { layout: pinned ? 'Szene' : perRow + ' pro Reihe', cardW: Math.round(card.width), imgH: Math.round(rect('.hpp-card__img').height), stackH: Math.round(stack.height), heading: px('.hpp-shop__heading', 'fontSize') + 'px/' + lines('.hpp-shop__heading') + 'Z', padTop: px('.hpp-shop__pin', 'paddingTop'), sceneH: Math.round(rect('.hpp-shop__scene').height) };
-                if (pinned) {
-                    out.shop.pinH = Math.round(pin.height);
-                    out.shop.fitsBy = Math.round(pin.height - (stack.bottom - pin.top));
-                    out.shop.headingGap = Math.round(stack.top - rect('.hpp-shop__intro-mask').bottom);
-                    out.shop.above = Math.round(rect('.hpp-shop__intro-mask').top - pin.top);
-                    out.shop.scroll = Math.round(rect('.hpp-shop__scene').height - pin.height);
-                }
-
-                out.faq = { accW: Math.round(rect('.hpp-acc').width), qW: Math.round(rect('.hpp-acc__question').width), q: px('.hpp-acc__question', 'fontSize') };
-                var features = Array.prototype.slice.call(root.querySelectorAll('.hpp-feature')).map(function (f) { return Math.round(f.getBoundingClientRect().top); });
-                out.about = { cols: features.filter(function (t) { return t === features[0]; }).length, featureW: Math.round(rect('.hpp-feature').width) };
-                out.offers = { w: Math.round(rect('.hpp-list').width), liW: Math.round(rect('.hpp-list li').width) };
+                out.slider = {
+                    bandW: Math.round(rect('.hpp-band').width),
+                    slideW: Math.round(slide.width),
+                    slideH: Math.round(slide.height),
+                    firstLeft: Math.round(slide.left),
+                    containerLeft: Math.round(rect('.hpp-band__title').left),
+                    visible: Math.round((viewport.width / (slide.width + 20)) * 10) / 10,
+                    count: root.querySelector('.hpp-slider__count').textContent.trim()
+                };
+                out.about = { cols: perRow('.hpp-feature'), featureW: Math.round(rect('.hpp-feature').width), offerCols: perRow('.hpp-checklist li'), offerH: Math.round(rect('.hpp-offer').height) };
+                var aside = rect('.hpp-faq__aside');
+                var acc = rect('.hpp-acc');
+                out.faq = { sideBySide: Math.abs(aside.top - acc.top) < 4, accW: Math.round(acc.width), qW: Math.round(rect('.hpp-acc__question').width), asidePos: getComputedStyle(root.querySelector('.hpp-faq__aside')).position };
+                out.total = Math.round(root.getBoundingClientRect().height);
                 return out;
             };
 

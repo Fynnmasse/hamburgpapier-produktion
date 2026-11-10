@@ -1,6 +1,6 @@
 # Produktionsseite als Erlebniswelt-Block
 
-Die Einzelseite (`index.html` im Projektordner) als ein Block für das ThemeWare®-Element
+Die Produktionsseite als ein Block für das ThemeWare®-Element
 **„Individueller Code (HTML/CSS/JS)"**.
 
 | Datei | Zweck |
@@ -22,37 +22,52 @@ Die Einzelseite (`index.html` im Projektordner) als ein Block für das ThemeWare
    - Beschreibung: `Erleben Sie die Produktion von Hygienepapier bei Hamburgpapier: Vom Zellstoff zur fertigen Rolle, mit Videos zu Papiermaschine, Trocknung, Schneiden, Verpacken und Versand.`
 5. Speichern, Shop-Cache leeren, Seite am Desktop und am Handy ansehen.
 
-## Was gegenüber der Einzelseite anders ist
+## Aufbau und Gestaltung
+
+Die Seite folgt einem ruhigen Unternehmensauftritt (Vorbild: Nachhaltigkeitsseite von Tork) –
+viel Weißraum, getönte Felder, Karten. Die **Farben sind die der Shop-Startseite**: Marine `#0f3d56`,
+Petrol `#0e7c96`, Ink `#16232f`, Fließtext `#3b4b57`, als getönte Fläche das helle Blau `#eef4f7`,
+Linien `#e3e7ea`. Alle Werte stehen als `--hpp-…`-Variablen oben in `src/produktion.css`.
+
+1. **Hero** – Video-Kachel mit Pause-Taste, darunter das helle Titelfeld. Beides zusammen füllt den ersten Bildschirm.
+2. **So entsteht Hygienepapier** – getöntes Band: Überschrift und Einleitungssatz, darunter die zehn
+   Produktionsschritte als Karussell mit Videos, Zähler, Pfeilen und einer Pause-Taste für die Videos.
+3. **Vorteile von Hamburgpapier** – zentrierte Einleitung, drei Karten (Lieferung, Service mit Telefon und E-Mail, Muster), darunter das Marine-Feld „Wir bieten".
+4. **Häufige Fragen** – Überschrift links (läuft am Desktop mit), Akkordeon rechts.
+
+Der frühere Abschnitt „Produktion gesehen? Gleich im Shop bestellen!" mit den Kategorie-Karten ist entfernt.
+
+## Technik
 
 - **Entfallen**, weil der Shop es mitbringt: eigener Header mit Menü, Ladebildschirm, Footer,
-  schwebender „Zum Online Shop"-Knopf, Cookiebot, Google Analytics, Smartlook, Meta-Angaben im `<head>`.
+  Cookiebot, Google Analytics, Smartlook, Meta-Angaben im `<head>`.
 - **Schriften** kommen vom Theme (Comfortaa für Überschriften, Open Sans für Text).
-  Bekommt das Theme andere Schriften: oben in `src/produktion.css` bei `--hpp-font-heading` / `--hpp-font-body` anpassen.
-- **Keine externe Bibliothek** mehr (GSAP entfällt), keine Schrift- oder Skript-Aufrufe zu Drittanbietern.
+  Bekommt das Theme andere Schriften: in `src/produktion.css` bei `--hpp-font-heading` / `--hpp-font-body` anpassen.
+- **Keine externe Bibliothek**, keine Schrift- oder Skript-Aufrufe zu Drittanbietern.
 - Alles liegt unter der Klasse `.hpp`, alle Maße in px – das Theme verändert den Block nicht und umgekehrt.
-- Die Höhe eines mitlaufenden Shop-Headers wird automatisch erkannt; der Hero füllt den ersten Bildschirm darunter.
-- Strukturierte Daten: FAQ und Herstellungsschritte sind enthalten. Website/Organisation liefert der Shop selbst.
-
-## Bildschirmgrößen und Ladeverhalten
-
-- **Shop-Karten:** 1 Spalte am Handy, 2 Spalten ab 600 px, ab 992 px die angepinnte Szene mit seitlichem Durchlauf.
-  Die Szene läuft nur, wenn die Karten in die Fensterhöhe passen (bei knapper Höhe mit flacheren Bildern);
-  sonst und auf sehr breiten Bildschirmen erscheinen die Karten als Raster.
-- **Hero-Video:** Am `<video>` im Hero stehen zwei Listen, getrennt mit `|`:
+- Die Höhe eines mitlaufenden Shop-Headers wird automatisch erkannt.
+- **Hero-Video:** Am `<video>` stehen zwei Listen, getrennt mit `|`:
   `data-hpp-videos` für Desktop/Tablet und `data-hpp-videos-light` für Handys und langsame Verbindungen
   (dort gehören nur kleine Dateien hinein). Geladen wird immer nur ein Video; im Datensparmodus keines.
-- **Schritt-Videos** laden erst, wenn der Slider in die Nähe des Bildschirms kommt.
+- **Vorschaubilder im Hero:** Am Element `hpp-hero__poster` steht in `data-hpp-posters` je Video ein winziges
+  Bild (64 × 36 px, als Text eingebettet), in derselben Reihenfolge wie `data-hpp-videos`. Es steht unscharf
+  im Hintergrund, bis das Video Bilder liefert. Kommt ein neues Hero-Video dazu, braucht es dort ein weiteres Bild.
+- **Schritt-Videos** laden erst, wenn das Karussell in die Nähe des Bildschirms kommt.
+- **Barrierefreiheit:** Alle Videos lassen sich anhalten. Hat ein Besucher „Bewegung reduzieren" eingestellt,
+  starten sie erst auf Knopfdruck. Im Karussell liegt nur der aktive Schritt in der Tab-Reihenfolge;
+  Blättern wird für Screenreader angesagt.
+- Strukturierte Daten: FAQ und Herstellungsschritte sind enthalten. Website/Organisation liefert der Shop selbst.
 - Der Build verdichtet CSS und Skript (Kommentare und Einrückung entfallen); das HTML bleibt lesbar,
-  damit sich Texte und Preise auch direkt im Shop ändern lassen.
+  damit sich Texte auch direkt im Shop ändern lassen.
 
 ## Medien
 
-Videos und Kartenbilder werden weiterhin von `https://hamburgpapier-shop-produktion.de/Assents/…` geladen
-(11 Videos, 5 Bilder). **Solange diese Adresse online ist, funktioniert alles.**
+Die Videos werden weiterhin von `https://hamburgpapier-shop-produktion.de/Assents/…` geladen (11 Dateien).
+**Solange diese Adresse online ist, funktioniert alles.**
 
 Soll die alte Seite abgeschaltet oder weitergeleitet werden, vorher:
 
-1. Dateien aus dem Ordner `Assents/` in Shopware unter Inhalte → Medien hochladen.
+1. Die Videos aus dem Ordner `Assents/` in Shopware unter Inhalte → Medien hochladen.
 2. In `src/produktion.html` die Adressen ersetzen (Suche nach `hamburgpapier-shop-produktion.de`).
 3. `node shopware/build.mjs` ausführen und den Block im Shop neu einfügen.
 
