@@ -278,16 +278,19 @@
    ========================================================================== */
 .hpp .hpp-hero {
     display: grid;
-    gap: 8px;
     margin: 0;
     padding: var(--hpp-inset) var(--hpp-inset) 0;
 }
+/* Video und Titelfeld liegen in derselben Zelle übereinander */
+.hpp .hpp-hero__media,
+.hpp .hpp-hero__panel { grid-area: 1 / 1; }
 
 .hpp .hpp-hero__media {
     position: relative;
-    /* Füllt den ersten Bildschirm: Fensterhöhe minus Shop-Header minus Titelfeld
-       (--hpp-hero-rest misst das Skript). Auf Hochkant-Handys nicht höher als 110 % der Breite. */
-    height: clamp(180px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-hero-rest, 320px)), min(600px, 110vw));
+    /* Füllt genau das Fenster unterhalb des Shop-Headers (--hpp-page-top misst das Skript).
+       Auf Hochkant-Handys höchstens 110 % der Breite, damit vom Querformat-Video nicht zu viel
+       abgeschnitten wird; braucht der Text mehr Platz, wächst die Kachel mit. */
+    min-height: clamp(240px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-inset) * 2), 110vw);
     overflow: hidden;
     border-radius: var(--hpp-radius-xl);
     background: var(--hpp-surface-media);
@@ -300,6 +303,14 @@
     background-position: center;
     background-size: cover;
     filter: blur(22px);
+}
+
+.hpp .hpp-hero__media::after {
+    /* Abdunklung, damit der weiße Text auf jedem Videobild lesbar bleibt */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 30, 42, 0.52);
 }
 
 .hpp .hpp-hero__video {
@@ -316,7 +327,7 @@
     position: absolute;
     right: 16px;
     bottom: 16px;
-    z-index: 2;
+    z-index: 3;
     border-color: transparent;
     background: var(--hpp-navy);
     color: #ffffff;
@@ -332,24 +343,35 @@
 }
 .hpp.hpp--js.hpp--video .hpp-hero__video { opacity: 1; }
 
-/* Titel und Einleitung stehen auf Weiß, damit sich das Feld vom getönten Band darunter abhebt */
+/* Titel und Einleitung mittig auf dem Video */
 .hpp .hpp-hero__panel {
-    padding: clamp(28px, 3.6vw, 48px) 0 clamp(8px, 1.4vw, 16px);
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 0 72px;
+    text-align: center;
+    pointer-events: none;
 }
+.hpp .hpp-hero__panel a { pointer-events: auto; }
 
 .hpp .hpp-hero__title {
-    color: var(--hpp-navy);
-    font-size: clamp(30px, 4.4vw + 12px, 60px);
-    line-height: 1.12;
+    max-width: 1100px;
+    margin-inline: auto;
+    color: #ffffff;
+    font-size: clamp(30px, 3.4vw + 16px, 64px);
+    line-height: 1.1;
     letter-spacing: -0.02em;
 }
 
 .hpp .hpp-hero__lead {
     max-width: 760px;
-    margin-top: clamp(14px, 1.6vw, 20px);
-    color: var(--hpp-ink-soft);
-    font-size: clamp(17px, 0.3vw + 16px, 18px);
+    margin: clamp(16px, 1.8vw, 24px) auto 0;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: clamp(16px, 0.4vw + 15px, 20px);
     line-height: 1.6;
+    text-wrap: balance;
 }
 
 /* ==========================================================================
@@ -364,23 +386,16 @@
 /* Getöntes Band mit dem Karussell */
 .hpp .hpp-band {
     margin: 0 var(--hpp-inset);
-    padding: clamp(36px, 4.6vw, 64px) 0 clamp(28px, 3.6vw, 48px);
+    padding: clamp(32px, 4.4vw, 60px) 0 clamp(28px, 3.6vw, 48px);
     overflow: hidden;
     border-radius: var(--hpp-radius-xl);
     background: var(--hpp-surface-tint);
 }
-.hpp .hpp-band__head { margin-bottom: clamp(12px, 2vw, 24px); }
+.hpp .hpp-band__head { margin-bottom: clamp(16px, 2.2vw, 28px); }
 .hpp .hpp-band__title {
     color: var(--hpp-navy);
     font-size: clamp(28px, 2vw + 16px, 44px);
     line-height: 1.18;
-}
-.hpp .hpp-band__lead {
-    max-width: 760px;
-    margin: clamp(12px, 1.4vw, 18px) 0 0;
-    color: var(--hpp-ink-soft);
-    font-size: clamp(17px, 0.3vw + 16px, 18px);
-    line-height: 1.6;
 }
 
 .hpp .hpp-slider { position: relative; }
@@ -772,20 +787,6 @@
 }
 
 @media (min-width: 992px) {
-    /* Überschrift links, Einleitung rechts — füllt die Breite statt einer schmalen Textspalte */
-    .hpp .hpp-hero__panel > .hpp-container,
-    .hpp .hpp-band__head {
-        display: grid;
-        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-        align-items: end;
-        gap: 48px;
-    }
-    .hpp .hpp-hero__lead,
-    .hpp .hpp-band__lead {
-        margin: 0;
-        padding-bottom: 6px;
-    }
-
     .hpp .hpp-offer {
         grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
         align-items: start;
@@ -811,13 +812,6 @@
 
 @media (min-width: 1100px) {
     .hpp .hpp-features { gap: 20px; }
-}
-
-/* Niedrige Fenster (Handy quer, kleine Laptops): flacheres Hero-Video */
-@media (max-height: 520px) {
-    .hpp .hpp-hero__media {
-        height: clamp(120px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-hero-rest, 320px)), min(600px, 110vw));
-    }
 }
 
 @media (hover: hover) and (pointer: fine) {

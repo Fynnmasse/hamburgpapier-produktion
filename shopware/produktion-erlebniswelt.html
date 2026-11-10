@@ -210,13 +210,14 @@ transform: translate3d(0, 0, 0);
 }
 .hpp .hpp-hero {
 display: grid;
-gap: 8px;
 margin: 0;
 padding: var(--hpp-inset) var(--hpp-inset) 0;
 }
+.hpp .hpp-hero__media,
+.hpp .hpp-hero__panel { grid-area: 1 / 1; }
 .hpp .hpp-hero__media {
 position: relative;
-height: clamp(180px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-hero-rest, 320px)), min(600px, 110vw));
+min-height: clamp(240px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-inset) * 2), 110vw);
 overflow: hidden;
 border-radius: var(--hpp-radius-xl);
 background: var(--hpp-surface-media);
@@ -227,6 +228,12 @@ inset: -40px;
 background-position: center;
 background-size: cover;
 filter: blur(22px);
+}
+.hpp .hpp-hero__media::after {
+content: '';
+position: absolute;
+inset: 0;
+background: rgba(10, 30, 42, 0.52);
 }
 .hpp .hpp-hero__video {
 position: absolute;
@@ -241,7 +248,7 @@ object-fit: cover;
 position: absolute;
 right: 16px;
 bottom: 16px;
-z-index: 2;
+z-index: 3;
 border-color: transparent;
 background: var(--hpp-navy);
 color: #ffffff;
@@ -257,20 +264,31 @@ transition: opacity 0.9s ease;
 }
 .hpp.hpp--js.hpp--video .hpp-hero__video { opacity: 1; }
 .hpp .hpp-hero__panel {
-padding: clamp(28px, 3.6vw, 48px) 0 clamp(8px, 1.4vw, 16px);
+position: relative;
+z-index: 2;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 48px 0 72px;
+text-align: center;
+pointer-events: none;
 }
+.hpp .hpp-hero__panel a { pointer-events: auto; }
 .hpp .hpp-hero__title {
-color: var(--hpp-navy);
-font-size: clamp(30px, 4.4vw + 12px, 60px);
-line-height: 1.12;
+max-width: 1100px;
+margin-inline: auto;
+color: #ffffff;
+font-size: clamp(30px, 3.4vw + 16px, 64px);
+line-height: 1.1;
 letter-spacing: -0.02em;
 }
 .hpp .hpp-hero__lead {
 max-width: 760px;
-margin-top: clamp(14px, 1.6vw, 20px);
-color: var(--hpp-ink-soft);
-font-size: clamp(17px, 0.3vw + 16px, 18px);
+margin: clamp(16px, 1.8vw, 24px) auto 0;
+color: rgba(255, 255, 255, 0.92);
+font-size: clamp(16px, 0.4vw + 15px, 20px);
 line-height: 1.6;
+text-wrap: balance;
 }
 .hpp .hpp-prod {
 margin: 0;
@@ -279,23 +297,16 @@ scroll-margin-top: 96px;
 }
 .hpp .hpp-band {
 margin: 0 var(--hpp-inset);
-padding: clamp(36px, 4.6vw, 64px) 0 clamp(28px, 3.6vw, 48px);
+padding: clamp(32px, 4.4vw, 60px) 0 clamp(28px, 3.6vw, 48px);
 overflow: hidden;
 border-radius: var(--hpp-radius-xl);
 background: var(--hpp-surface-tint);
 }
-.hpp .hpp-band__head { margin-bottom: clamp(12px, 2vw, 24px); }
+.hpp .hpp-band__head { margin-bottom: clamp(16px, 2.2vw, 28px); }
 .hpp .hpp-band__title {
 color: var(--hpp-navy);
 font-size: clamp(28px, 2vw + 16px, 44px);
 line-height: 1.18;
-}
-.hpp .hpp-band__lead {
-max-width: 760px;
-margin: clamp(12px, 1.4vw, 18px) 0 0;
-color: var(--hpp-ink-soft);
-font-size: clamp(17px, 0.3vw + 16px, 18px);
-line-height: 1.6;
 }
 .hpp .hpp-slider { position: relative; }
 .hpp .hpp-slider:focus,
@@ -648,18 +659,6 @@ max-width: none;
 .hpp .hpp-checklist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 992px) {
-.hpp .hpp-hero__panel > .hpp-container,
-.hpp .hpp-band__head {
-display: grid;
-grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-align-items: end;
-gap: 48px;
-}
-.hpp .hpp-hero__lead,
-.hpp .hpp-band__lead {
-margin: 0;
-padding-bottom: 6px;
-}
 .hpp .hpp-offer {
 grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
 align-items: start;
@@ -681,11 +680,6 @@ top: calc(var(--hpp-top) + 32px);
 }
 @media (min-width: 1100px) {
 .hpp .hpp-features { gap: 20px; }
-}
-@media (max-height: 520px) {
-.hpp .hpp-hero__media {
-height: clamp(120px, calc(var(--hpp-vh) - var(--hpp-page-top) - var(--hpp-hero-rest, 320px)), min(600px, 110vw));
-}
 }
 @media (hover: hover) and (pointer: fine) {
 .hpp .hpp-feature,
@@ -726,7 +720,7 @@ transform: none;
 
 <div class="hpp" id="hpp-produktion" lang="de">
 
-    <!-- ===== Hero: Video-Kachel mit angesetztem Titelfeld =====
+    <!-- ===== Hero: Video-Kachel mit Titel und Einleitung darüber =====
          data-hpp-videos:       Videos für Desktop/Tablet, getrennt mit | (bei jedem Besuch ein anderes)
          data-hpp-videos-light: kleine Videos für Handys und langsame Verbindungen
          Geladen wird immer nur das eine ausgewählte Video. -->
@@ -740,7 +734,7 @@ transform: none;
         </div>
         <div class="hpp-hero__panel">
             <div class="hpp-container">
-                <h1 class="hpp-hero__title">Hygienepapier-Produktion</h1>
+                <h1 class="hpp-hero__title">Produktion von Hygienepapier bei Hamburgpapier</h1>
                 <p class="hpp-hero__lead">Vom Zellstoff zur fertigen Rolle. Wir zeigen die wichtigsten Stationen der Herstellung. Transparent – kompakt – praxisnah.</p>
             </div>
         </div>
@@ -752,7 +746,6 @@ transform: none;
             <div class="hpp-slider" id="hpp-process-slider">
                 <div class="hpp-container hpp-band__head">
                     <h2 class="hpp-band__title">So entsteht Hygienepapier</h2>
-                    <p class="hpp-band__lead">Unsere Hygienepapiere entstehen auf modernen, ressourcenschonenden Anlagen – mit Fokus auf stabile Qualität und verlässliche Verfügbarkeit.</p>
                 </div>
 
                 <div class="hpp-slider__viewport">

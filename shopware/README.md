@@ -29,9 +29,8 @@ viel Weißraum, getönte Felder, Karten. Die **Farben sind die der Shop-Startsei
 Petrol `#0e7c96`, Ink `#16232f`, Fließtext `#3b4b57`, als getönte Fläche das helle Blau `#eef4f7`,
 Linien `#e3e7ea`. Alle Werte stehen als `--hpp-…`-Variablen oben in `src/produktion.css`.
 
-1. **Hero** – Video-Kachel mit Pause-Taste, darunter das helle Titelfeld. Beides zusammen füllt den ersten Bildschirm.
-2. **So entsteht Hygienepapier** – getöntes Band: Überschrift und Einleitungssatz, darunter die zehn
-   Produktionsschritte als Karussell mit Videos, Zähler, Pfeilen und einer Pause-Taste für die Videos.
+1. **Hero** – Video füllt das Fenster, Titel und Einleitung stehen mittig in Weiß darüber (abgedunkelt), mit Pause-Taste.
+2. **So entsteht Hygienepapier** – getöntes Band mit Überschrift und den zehn Produktionsschritten als Karussell mit Videos, Zähler, Pfeilen und einer Pause-Taste für die Videos.
 3. **Vorteile von Hamburgpapier** – zentrierte Einleitung, drei Karten (Lieferung, Service mit Telefon und E-Mail, Muster), darunter das Marine-Feld „Wir bieten".
 4. **Häufige Fragen** – Überschrift links (läuft am Desktop mit), Akkordeon rechts.
 
