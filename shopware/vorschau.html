@@ -103,6 +103,65 @@
                 };
             }
 
+            /* Prüfwerkzeug: window.__hppAudit() meldet Überläufe, abgeschnittene Texte und Kernmaße */
+            window.__hppAudit = function () {
+                var root = document.getElementById('hpp-produktion');
+                if (!root) { return { error: 'Block fehlt' }; }
+                var cw = document.documentElement.clientWidth;
+                var vh = window.innerHeight;
+                var name = function (el) { return (el.className && el.className.toString().split(' ')[0]) || el.tagName.toLowerCase(); };
+                var rect = function (sel) { var el = root.querySelector(sel); return el ? el.getBoundingClientRect() : null; };
+                var px = function (sel, prop) { var el = root.querySelector(sel); return el ? Math.round(parseFloat(getComputedStyle(el)[prop]) * 10) / 10 : null; };
+                var lines = function (sel) { var el = root.querySelector(sel); if (!el) { return null; } return Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)); };
+                var pinned = root.classList.contains('hpp--pin');
+                var out = { size: window.innerWidth + 'x' + vh, mode: root.className.replace(/^hpp\s*/, ''), hscroll: document.documentElement.scrollWidth - cw };
+
+                var outside = [];
+                var clipped = [];
+                Array.prototype.forEach.call(root.querySelectorAll('*'), function (el) {
+                    if (el.closest('.hpp-slider__track') || el.closest('.hpp-sr-only') || el.classList.contains('hpp-sr-only')) { return; }
+                    var r = el.getBoundingClientRect();
+                    if (!r.width || !r.height) { return; }
+                    if (!(pinned && el.closest('.hpp-shop__rail')) && (r.right > cw + 1 || r.left < -1)) {
+                        outside.push(name(el) + ' ' + Math.round(r.left) + '..' + Math.round(r.right));
+                    }
+                    if (/^(H1|H2|H3|P|LI|A|BUTTON|DIV)$/.test(el.tagName) && el.children.length < 6 && el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX === 'visible' && !el.classList.contains('hpp-shop__rail-wrap') && !(pinned && el.closest('.hpp-shop__rail'))) {
+                        clipped.push(name(el) + ' ' + el.scrollWidth + '>' + el.clientWidth);
+                    }
+                });
+                out.outside = outside.slice(0, 8);
+                out.clipped = clipped.slice(0, 8);
+
+                var hero = rect('.hpp-hero');
+                var heroContent = rect('.hpp-hero__content');
+                out.hero = { h: Math.round(hero.height), fold: Math.round(hero.bottom + window.pageYOffset - vh), contentH: Math.round(heroContent.height), title: px('.hpp-hero__title', 'fontSize') + 'px/' + lines('.hpp-hero__title') + 'Z', titleW: Math.round(rect('.hpp-hero__title').width), sub: px('.hpp-hero__subtitle', 'fontSize') + 'px/' + lines('.hpp-hero__subtitle') + 'Z' };
+
+                var slide = rect('.hpp-slide');
+                var viewport = rect('.hpp-slider__viewport');
+                out.slider = { slideW: Math.round(slide.width), slideH: Math.round(slide.height), viewportW: Math.round(viewport.width), videoH: Math.round(rect('.hpp-slide__video').height), h2: px('.hpp-prod h2', 'fontSize') };
+
+                var cards = Array.prototype.slice.call(root.querySelectorAll('.hpp-shop__cell--card'));
+                var tops = cards.map(function (c) { return Math.round(c.getBoundingClientRect().top); });
+                var perRow = tops.filter(function (t) { return t === tops[0]; }).length;
+                var card = rect('.hpp-card');
+                var stack = rect('.hpp-card-stack');
+                var pin = rect('.hpp-shop__pin');
+                out.shop = { layout: pinned ? 'Szene' : perRow + ' pro Reihe', cardW: Math.round(card.width), imgH: Math.round(rect('.hpp-card__img').height), stackH: Math.round(stack.height), heading: px('.hpp-shop__heading', 'fontSize') + 'px/' + lines('.hpp-shop__heading') + 'Z', padTop: px('.hpp-shop__pin', 'paddingTop'), sceneH: Math.round(rect('.hpp-shop__scene').height) };
+                if (pinned) {
+                    out.shop.pinH = Math.round(pin.height);
+                    out.shop.fitsBy = Math.round(pin.height - (stack.bottom - pin.top));
+                    out.shop.headingGap = Math.round(stack.top - rect('.hpp-shop__intro-mask').bottom);
+                    out.shop.above = Math.round(rect('.hpp-shop__intro-mask').top - pin.top);
+                    out.shop.scroll = Math.round(rect('.hpp-shop__scene').height - pin.height);
+                }
+
+                out.faq = { accW: Math.round(rect('.hpp-acc').width), qW: Math.round(rect('.hpp-acc__question').width), q: px('.hpp-acc__question', 'fontSize') };
+                var features = Array.prototype.slice.call(root.querySelectorAll('.hpp-feature')).map(function (f) { return Math.round(f.getBoundingClientRect().top); });
+                out.about = { cols: features.filter(function (t) { return t === features[0]; }).length, featureW: Math.round(rect('.hpp-feature').width) };
+                out.offers = { w: Math.round(rect('.hpp-list').width), liW: Math.round(rect('.hpp-list li').width) };
+                return out;
+            };
+
             fetch('produktion-erlebniswelt.html', { cache: 'no-store' })
                 .then(function (response) { return response.text(); })
                 .then(function (html) {

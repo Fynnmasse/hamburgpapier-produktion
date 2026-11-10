@@ -33,6 +33,18 @@ Die Einzelseite (`index.html` im Projektordner) als ein Block für das ThemeWare
 - Die Höhe eines mitlaufenden Shop-Headers wird automatisch erkannt; der Hero füllt den ersten Bildschirm darunter.
 - Strukturierte Daten: FAQ und Herstellungsschritte sind enthalten. Website/Organisation liefert der Shop selbst.
 
+## Bildschirmgrößen und Ladeverhalten
+
+- **Shop-Karten:** 1 Spalte am Handy, 2 Spalten ab 600 px, ab 992 px die angepinnte Szene mit seitlichem Durchlauf.
+  Die Szene läuft nur, wenn die Karten in die Fensterhöhe passen (bei knapper Höhe mit flacheren Bildern);
+  sonst und auf sehr breiten Bildschirmen erscheinen die Karten als Raster.
+- **Hero-Video:** Am `<video>` im Hero stehen zwei Listen, getrennt mit `|`:
+  `data-hpp-videos` für Desktop/Tablet und `data-hpp-videos-light` für Handys und langsame Verbindungen
+  (dort gehören nur kleine Dateien hinein). Geladen wird immer nur ein Video; im Datensparmodus keines.
+- **Schritt-Videos** laden erst, wenn der Slider in die Nähe des Bildschirms kommt.
+- Der Build verdichtet CSS und Skript (Kommentare und Einrückung entfallen); das HTML bleibt lesbar,
+  damit sich Texte und Preise auch direkt im Shop ändern lassen.
+
 ## Medien
 
 Videos und Kartenbilder werden weiterhin von `https://hamburgpapier-shop-produktion.de/Assents/…` geladen

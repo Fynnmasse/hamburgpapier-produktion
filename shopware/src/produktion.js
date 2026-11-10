@@ -20,6 +20,13 @@
         var hasIO = 'IntersectionObserver' in win;
         var noop = function () {};
 
+        /* Datensparmodus bzw. langsame Verbindung: weniger Video laden */
+        var connection = win.navigator.connection || win.navigator.mozConnection || win.navigator.webkitConnection || {};
+        var saveData = connection.saveData === true;
+        var slowNet = /(^|-)(2g|3g)$/.test(connection.effectiveType || '');
+        var lowData = saveData || slowNet;
+        var isPhone = function () { return !!(win.matchMedia && win.matchMedia('(max-width: 767px)').matches); };
+
         var q = function (selector, context) { return (context || root).querySelector(selector); };
         var qa = function (selector, context) {
             return Array.prototype.slice.call((context || root).querySelectorAll(selector));
@@ -87,11 +94,19 @@
            ------------------------------------------------------------------ */
         var shopHeader = document.querySelector('header.header-main');
         var topOffset = -1;
+        var headerSticky = false;
+        var headerChecked = -1000;
         var measureTop = function () {
             var value = 0;
             if (shopHeader) {
-                var position = win.getComputedStyle(shopHeader).position;
-                if (position === 'sticky' || position === 'fixed') {
+                /* Ob der Header mitläuft, höchstens alle 400 ms neu nachsehen */
+                var now = win.performance.now();
+                if (now - headerChecked > 400) {
+                    headerChecked = now;
+                    var position = win.getComputedStyle(shopHeader).position;
+                    headerSticky = position === 'sticky' || position === 'fixed';
+                }
+                if (headerSticky) {
                     var rect = shopHeader.getBoundingClientRect();
                     if (rect.top <= 1 && rect.bottom > 0) { value = Math.round(rect.bottom); }
                 }
@@ -150,23 +165,28 @@
             var hero = q('.hpp-hero');
             var video = q('.hpp-hero__video');
             var content = q('.hpp-hero__content');
-            var introDone = false;
-            var intro = function () {
-                if (introDone) { return; }
-                introDone = true;
-                if (hero) { void hero.offsetWidth; }
-                root.classList.add('hpp--intro');
-            };
-            /* Sicherheitsnetz: der Hero wird in jedem Fall sichtbar */
-            win.setTimeout(intro, 2500);
-            if (!hero) { intro(); return; }
+
+            /* Der Text blendet sofort ein und wartet nicht auf das Video */
+            if (hero) { void hero.offsetWidth; }
+            root.classList.add('hpp--intro');
+            if (!hero) { return; }
 
             if (video) {
-                /* Bei jedem Besuch eines der hinterlegten Videos, nie zweimal dasselbe */
-                var list = (video.getAttribute('data-hpp-videos') || '').split('|')
-                    .map(function (source) { return source.trim(); })
-                    .filter(Boolean);
-                if (list.length) {
+                var showVideo = function () { root.classList.add('hpp--video'); };
+                var split = function (value) {
+                    return (value || '').split('|')
+                        .map(function (source) { return source.trim(); })
+                        .filter(Boolean);
+                };
+                var list = split(video.getAttribute('data-hpp-videos'));
+                var light = split(video.getAttribute('data-hpp-videos-light'));
+                /* Am Handy und bei langsamer Verbindung nur die kleinen Videos */
+                if (light.length && (slowNet || isPhone())) { list = light; }
+
+                /* Im Datensparmodus bleibt es beim Farbverlauf */
+                if (list.length && !saveData) {
+                    /* Bei jedem Besuch eines der hinterlegten Videos, nie zweimal dasselbe.
+                       Es wird nur dieses eine geladen. */
                     var last = '';
                     try { last = win.localStorage.getItem('hpp-hero-video-last') || ''; } catch (error) { last = ''; }
                     var candidates = list.length > 1 && last
@@ -174,29 +194,33 @@
                         : list;
                     if (!candidates.length) { candidates = list; }
                     var pick = candidates[Math.floor(Math.random() * candidates.length)];
-                    if (pick && pick !== video.getAttribute('src')) {
-                        video.setAttribute('src', pick);
-                        video.load();
-                    }
                     try { win.localStorage.setItem('hpp-hero-video-last', pick); } catch (error) { /* Speicher gesperrt */ }
-                }
 
-                video.muted = true;
-                video.setAttribute('playsinline', '');
-                video.setAttribute('webkit-playsinline', '');
-                if (reduced) {
-                    video.removeAttribute('autoplay');
-                    video.pause();
-                } else {
-                    play(video);
-                }
-            }
+                    video.muted = true;
+                    video.setAttribute('playsinline', '');
+                    video.setAttribute('webkit-playsinline', '');
+                    /* Erst einblenden, wenn wirklich ein Bild da ist – sonst bleibt der Farbverlauf stehen */
+                    video.addEventListener('loadeddata', showVideo, { once: true });
+                    win.setTimeout(function () {
+                        if (video.readyState >= 2) { showVideo(); }
+                    }, 4000);
+                    video.preload = reduced ? 'metadata' : 'auto';
+                    video.src = pick;
 
-            if (!video || reduced || video.readyState >= 2) {
-                intro();
-            } else {
-                video.addEventListener('loadeddata', intro, { once: true });
-                win.setTimeout(intro, 1200);
+                    if (!reduced) {
+                        play(video);
+                        /* Außerhalb des Bildschirms pausieren: spart Akku und Rechenzeit */
+                        if (hasIO) {
+                            new win.IntersectionObserver(function (entries) {
+                                if (entries[entries.length - 1].isIntersecting) {
+                                    play(video);
+                                } else {
+                                    video.pause();
+                                }
+                            }).observe(hero);
+                        }
+                    }
+                }
             }
 
             /* Text wandert beim Scrollen leicht nach oben */
@@ -208,7 +232,9 @@
                     var progress = Math.round(clamp(-rect.top / (rect.height || 1), 0, 1) * 1000) / 1000;
                     if (progress !== lastShift) {
                         lastShift = progress;
-                        content.style.setProperty('--hpp-hero-p', String(progress));
+                        content.style.transform = progress > 0
+                            ? 'translate3d(0, ' + (-25 * progress).toFixed(2) + '%, 0)'
+                            : '';
                     }
                 });
             }
@@ -238,7 +264,10 @@
             slides.forEach(function (slide, index) {
                 var title = q('.hpp-slide__title', slide);
                 var text = q('.hpp-slide__text', slide);
-                var label = title && title.textContent ? title.textContent.trim() : 'Prozessschritt ' + (index + 1);
+                /* Weiche Trennstriche aus dem Titel nicht mit vorlesen lassen */
+                var label = title && title.textContent
+                    ? title.textContent.replace(/\u00AD/g, '').trim()
+                    : 'Prozessschritt ' + (index + 1);
                 slide.setAttribute('tabindex', '0');
                 slide.setAttribute('role', 'group');
                 slide.setAttribute('aria-roledescription', 'slide');
@@ -254,16 +283,18 @@
             });
 
             /* --- Videos: erst laden, wenn der Slider in die Nähe kommt --- */
-            var loadVideo = function (index, eager) {
+            /* Stufe 1 = Eckdaten und erstes Bild, Stufe 2 = vorpuffern */
+            var loadVideo = function (index, level) {
                 var video = videos[index];
                 if (!video) { return; }
-                var level = eager ? 2 : 1;
                 var have = parseInt(video.getAttribute('data-hpp-loaded') || '0', 10);
                 if (have >= level) { return; }
-                video.preload = eager ? 'auto' : 'metadata';
+                video.preload = level > 1 ? 'auto' : 'metadata';
                 video.setAttribute('data-hpp-loaded', String(level));
-                video.load();
+                /* Neu laden nur beim ersten Mal, sonst verschwände das sichtbare Standbild kurz */
+                if (have === 0) { video.load(); }
             };
+            /* Manche Videos beginnen dunkel: ein Stück vorspulen, damit ein Bild zu sehen ist */
             var primeFrame = function (video) {
                 if (!video || video.getAttribute('data-hpp-primed') === '1') { return; }
                 var prime = function () {
@@ -274,18 +305,19 @@
                         ? Math.min(0.05, Math.max(0, video.duration * 0.01))
                         : 0.01;
                     try { video.currentTime = time; } catch (error) { /* Sprung nicht möglich */ }
-                    video.pause();
                 };
-                if (video.readyState >= 2) {
+                if (video.readyState >= 1) {
                     prime();
                 } else {
-                    video.addEventListener('loadeddata', prime, { once: true });
+                    video.addEventListener('loadedmetadata', prime, { once: true });
                 }
             };
+            /* Aktiven Schritt vorpuffern, dazu den nächsten (am Desktop auch den vorherigen) */
             var warmNeighbours = function (index) {
-                loadVideo(index, true);
-                loadVideo(index - 1, true);
-                loadVideo(index + 1, true);
+                loadVideo(index, 2);
+                if (lowData) { return; }
+                loadVideo(index + 1, 2);
+                if (!isPhone()) { loadVideo(index - 1, 2); }
             };
             var restart = function (video) {
                 if (video.readyState > 0) {
@@ -300,7 +332,9 @@
                 ? new win.IntersectionObserver(function (entries) {
                     entries.forEach(function (entry) {
                         if (!entry.isIntersecting) { return; }
-                        loadVideo(videos.indexOf(entry.target), false);
+                        var index = videos.indexOf(entry.target);
+                        loadVideo(index, 1);
+                        if (entry.target.getAttribute('data-hpp-prime') === 'true') { primeFrame(entry.target); }
                         lazyObserver.unobserve(entry.target);
                     });
                 }, { root: null, rootMargin: '200px 0px', threshold: 0.2 })
@@ -314,13 +348,11 @@
                     video.muted = true;
                     video.setAttribute('playsinline', '');
                     video.setAttribute('webkit-playsinline', '');
-                    if (video.getAttribute('data-hpp-prime') === 'true') {
-                        loadVideo(index, true);
-                        primeFrame(video);
-                    } else if (lazyObserver && index !== 0) {
+                    if (lazyObserver && index !== 0) {
                         lazyObserver.observe(video);
                     } else {
-                        loadVideo(index, false);
+                        loadVideo(index, 1);
+                        if (video.getAttribute('data-hpp-prime') === 'true') { primeFrame(video); }
                     }
                 });
                 if (inView && videos[active]) { play(videos[active]); }
@@ -584,6 +616,7 @@
             var pin = q('.hpp-shop__pin', section);
             var wrap = q('.hpp-shop__rail-wrap', section);
             var rail = q('.hpp-shop__rail', section);
+            var images = qa('.hpp-card__img', section);
             var ready = false;
             var setReady = function () {
                 if (ready) { return; }
@@ -622,11 +655,26 @@
                 return !(bodyScrolls && htmlScrolls);
             };
 
-            /* Weg der Kartenreihe: so weit, dass die letzte Karte am rechten Rand ankommt */
-            var measureTravel = function () {
+            var clearMotion = function () {
+                rail.style.transform = '';
+                images.forEach(function (image) { image.style.transform = ''; });
+                scene.style.removeProperty('--hpp-scene-scroll');
+            };
+
+            /* Szene vermessen. Sie lohnt sich nur, wenn die Karten in die Höhe passen
+               und es seitlich etwas zu durchlaufen gibt. */
+            var measureScene = function () {
                 var last = rail.lastElementChild;
-                var contentWidth = last ? last.offsetLeft + last.offsetWidth : rail.scrollWidth;
+                var contentWidth = last ? last.offsetLeft + last.offsetWidth : 0;
                 travel = Math.max(0, Math.round(contentWidth - wrap.clientWidth));
+                if (travel < 24) { return false; }
+                var paddingBottom = parseFloat(win.getComputedStyle(pin).paddingBottom) || 0;
+                if (wrap.offsetTop + wrap.offsetHeight > pin.clientHeight - paddingBottom + 1) { return false; }
+                /* Scrollweg: doppelter seitlicher Weg, mindestens ein halber, höchstens 1,6 Bildschirme */
+                var height = pin.clientHeight;
+                var distance = clamp(travel * 2, height * 0.5, height * 1.6);
+                scene.style.setProperty('--hpp-scene-scroll', Math.round(distance) + 'px');
+                return true;
             };
 
             var update = function () {
@@ -642,25 +690,34 @@
                 progress = Math.round(progress * 10000) / 10000;
                 if (progress === lastProgress) { return; }
                 lastProgress = progress;
-                rail.style.setProperty('--hpp-shop-x', (-travel * progress).toFixed(1) + 'px');
-                section.style.setProperty('--hpp-card-parallax', (-6 * progress).toFixed(2) + '%');
+                /* Direkt als transform gesetzt: läuft ohne Stil-Neuberechnung der Karteninhalte */
+                rail.style.transform = 'translate3d(' + (-travel * progress).toFixed(1) + 'px, 0, 0)';
+                var shift = 'translate3d(' + (-6 * progress).toFixed(2) + '%, 0, 0)';
+                images.forEach(function (image) { image.style.transform = shift; });
             };
 
             var applyMode = function () {
                 var next = supported && desktop.matches && freeAncestors();
-                if (next !== pinned) {
-                    pinned = next;
-                    root.classList.toggle('hpp--pin', pinned);
-                    if (!pinned) {
-                        rail.style.removeProperty('--hpp-shop-x');
-                        section.style.removeProperty('--hpp-card-parallax');
+                if (next) {
+                    /* Szene probeweise einschalten und vermessen (noch im selben Bild, also unsichtbar) */
+                    root.classList.add('hpp--pin');
+                    root.classList.remove('hpp--compact');
+                    rail.style.transform = '';
+                    measureTop();
+                    next = measureScene();
+                    if (!next && travel >= 24) {
+                        /* Passt es in der Höhe nicht: zweiter Versuch mit flacheren Bildern */
+                        root.classList.add('hpp--compact');
+                        next = measureScene();
                     }
                 }
-                lastProgress = -1;
-                if (pinned) {
-                    measureTop();
-                    measureTravel();
+                pinned = next;
+                root.classList.toggle('hpp--pin', pinned);
+                if (!pinned) {
+                    root.classList.remove('hpp--compact');
+                    clearMotion();
                 }
+                lastProgress = -1;
                 update();
             };
 
@@ -675,6 +732,7 @@
             applyMode();
             win.addEventListener('resize', queueMode);
             win.addEventListener('load', applyMode);
+            if (document.fonts && document.fonts.ready) { document.fonts.ready.then(queueMode); }
             if (typeof desktop.addEventListener === 'function') {
                 desktop.addEventListener('change', applyMode);
             } else if (typeof desktop.addListener === 'function') {
