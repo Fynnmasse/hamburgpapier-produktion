@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Vorschau · Produktionsseite im Shop-Rahmen</title>
+    <!--
+        Lokale Vorschau: lädt das echte Theme-CSS des Shops und baut die Hüllen
+        einer Erlebniswelt nach (volle Breite, ThemeWare-Element), damit der Block
+        unter denselben Bedingungen läuft wie im Shop.
+
+        Start:  node shopware/vorschau-server.mjs
+        Dann:   http://localhost:8765/shopware/vorschau.html
+        Zusätze: ?sticky=1  Header läuft auch am Desktop mit
+                 ?stub=1    für automatische Tests (ersetzt Animations-Takt und Sichtbarkeits-Beobachter)
+
+        Die Adresse des Theme-CSS ändert sich, wenn das Theme im Shop neu
+        kompiliert wird. Wirkt die Vorschau unformatiert: im Shop den Quelltext
+        öffnen, nach „all.css" suchen und die Adresse unten ersetzen.
+    -->
+    <link rel="stylesheet" href="https://www.hamburgpapier-shop.de/theme/5178f013b047ec54ae37034556ad3858/css/all.css?1793975859">
+    <style>
+        .vorschau-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 185px;
+            border-bottom: 1px solid #e3e6e9;
+            background: #ffffff;
+            color: #6b7885;
+            font: 600 14px/1.4 "Open Sans", sans-serif;
+        }
+        .vorschau-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 480px;
+            background: #0a2d47;
+            color: #ffffff;
+            font: 600 14px/1.4 "Open Sans", sans-serif;
+        }
+        @media (max-width: 991px) {
+            .vorschau-header { position: sticky; top: 0; z-index: 1020; height: 60px; }
+        }
+        .vorschau-sticky .vorschau-header { position: sticky; top: 0; z-index: 1020; height: 60px; }
+    </style>
+</head>
+<body class="is-ctl-navigation themeware twt-modern twt-header-type-1 twt-full-width-boxed twt-is-cms-landingpage twt-cms-styling">
+    <header class="header-main vorschau-header">Shop-Header (Platzhalter)</header>
+
+    <main class="content-main" id="content-main">
+        <div class="container-main">
+            <div class="cms-page">
+                <div class="cms-sections">
+                    <div class="cms-section pos-0 cms-section-default">
+                        <section class="cms-section-default full-width">
+                            <div class="cms-block pos-0 cms-block-text position-relative">
+                                <div>
+                                    <div class="cms-block-container">
+                                        <div class="cms-block-container-row row cms-row">
+                                            <div class="col-12">
+                                                <div class="cms-element-twt-custom-code element twt-cms-element" id="vorschau-mount"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="vorschau-footer">Shop-Footer (Platzhalter)</footer>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(location.search);
+            if (params.get('sticky') === '1') { document.body.classList.add('vorschau-sticky'); }
+
+            if (params.get('stub') === '1') {
+                /* Für automatische Tests in einem nicht sichtbaren Fenster: dort laufen
+                   weder requestAnimationFrame noch IntersectionObserver noch Übergänge. */
+                var still = document.createElement('style');
+                still.textContent = '.hpp *, .hpp *::before, .hpp *::after { transition: none !important; animation-duration: 0s !important; animation-delay: 0s !important; }';
+                document.head.appendChild(still);
+                window.requestAnimationFrame = function (callback) {
+                    return window.setTimeout(function () { callback(performance.now()); }, 16);
+                };
+                window.cancelAnimationFrame = function (handle) { window.clearTimeout(handle); };
+                window.IntersectionObserver = function (callback) {
+                    var self = this;
+                    this.observe = function (target) {
+                        window.setTimeout(function () {
+                            callback([{ target: target, isIntersecting: true, intersectionRatio: 1 }], self);
+                        }, 30);
+                    };
+                    this.unobserve = function () {};
+                    this.disconnect = function () {};
+                };
+            }
+
+            fetch('produktion-erlebniswelt.html', { cache: 'no-store' })
+                .then(function (response) { return response.text(); })
+                .then(function (html) {
+                    /* createContextualFragment führt die enthaltenen Skripte aus – wie im Shop */
+                    var fragment = document.createRange().createContextualFragment(html);
+                    document.getElementById('vorschau-mount').appendChild(fragment);
+                });
+        })();
+    </script>
+</body>
+</html>

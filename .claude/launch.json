@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vorschau",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["shopware/vorschau-server.mjs"],
+      "port": 8765
+    }
+  ]
+}
